@@ -4,10 +4,12 @@
 var _ = require('underscore');
 var Shuffle = require('shuffle');
 
-var PLAYER_SETUP = require('../config/player_setup');
-var GOOD_ROLES = PLAYER_SETUP.GOOD_ROLES;
-var BAD_ROLES = PLAYER_SETUP.BAD_ROLES;
-var VIEW = PLAYER_SETUP.VIEW;
+var Quest = require('./quest').Quest;
+var RULES = require('../config/rules');
+var PLAYERS = RULES.PLAYERS;
+var GOOD_ROLES = RULES.GOOD_ROLES;
+var BAD_ROLES = RULES.BAD_ROLES;
+var VIEW = RULES.VIEW;
 
 
 var STAGES = {
@@ -23,19 +25,42 @@ function Game(gameId, ownerId, options) {
     this.options = options || {};
     this.id = gameId;
     this.ownerId = ownerId;
-    this.missionIndex = 0;
+
+    this.stage = STAGES.NOT_STARTED;
+
+
+
     this.numSuccesses = 0;
     this.numFails = 0;
     this.numRejections = 0;
-    this.stage = STAGES.NOT_STARTED;
-    this.king = null;
+
+    this.questIndex = 0;
+    this.quests = [];
+
+
+    this.players = {};
+    this.roles = {};
     this.goodSpecialRoles = this.options.goodSpecialRoles || {};
     this.badSpecialRoles = this.options.badSpecialRoles || {};
-    this.roles = {};
-    this.players = {};
+
+    this.kingIndex = 0;
     this.playerOrder = [];
-    this.kingMarker = 0;
+
+    this.selectedQuesters = [];
 }
+
+Game.prototype.currentKing = function(){
+    return this.playerOrder[this.kingIndex];
+};
+
+Game.prototype.currentQuest = function(){
+    return this.quests[this.questIndex];
+};
+
+Game.prototype.getNumPlayers = function () {
+    var numPlayers = Object.keys(this.players).length;
+    return numPlayers;
+};
 
 
 Game.prototype._validateRoles = function (numVillageIdiots, numRegularBadPlayers) {
@@ -68,8 +93,8 @@ Game.prototype._validateRoles = function (numVillageIdiots, numRegularBadPlayers
 };
 
 Game.prototype._makeRoleDeck = function () {
-    var numVillageIdiots = PLAYER_SETUP[this.getNumPlayers()]['good'] - this.goodSpecialRoles.length,
-        numRegularBadPlayers = PLAYER_SETUP[this.getNumPlayers()]['bad'] - this.badSpecialRoles.length,
+    var numVillageIdiots = PLAYERS[this.getNumPlayers()].numGood - this.goodSpecialRoles.length,
+        numRegularBadPlayers = PLAYERS[this.getNumPlayers()].numBad - this.badSpecialRoles.length,
         roleCardsPreShuffled = [],
         deck;
 
@@ -121,19 +146,31 @@ Game.prototype.addPlayer = function (player) {
     if (!player || !player.id) {
         throw new Error('malformed player: ', JSON.stringify(player));
     }
-    if (this.getNumPlayers() >= PLAYER_SETUP.maxNumberOfPlayers) {
-        throw new Error('cannot add more players than ' + PLAYER_SETUP.maxNumberOfPlayers);
+    if (this.getNumPlayers() >= RULES.maxNumberOfPlayers) {
+        throw new Error('cannot add more players than ' + RULES.maxNumberOfPlayers);
     }
     this.players[player.id] = player;
 
 };
 
+Game.prototype._createQuests = function(){
+    if (this.stage != STAGES.NOT_STARTED){
+        throw new Error('cannot create quests after the game has started');
+    }
 
-Game.prototype.getNumPlayers = function () {
-    var numPlayers = Object.keys(this.players).length;
-    return numPlayers;
-}
+    var self = this,
+        questConfigs = PLAYERS[this.getNumPlayers()].quests
+    _.each(questConfigs, function(questConfig, index){
+        self.quests[index - 1] = new Quest(questConfig.numPlayers, questConfig.numToFail);
+    });
+};
+
+
 Game.prototype.start = function () {
+    if (this.stage !== STAGES.NOT_STARTED) {
+        throw new Error('tried to start game after game started');
+    }
+
     var self = this;
     if (this.getNumPlayers() < 5) {
         throw new Error('Not enough players have joined yet');
@@ -145,10 +182,28 @@ Game.prototype.start = function () {
         player.updateView(view);
     });
 
+    this._createQuests();
+
     this.playerOrder = Shuffle.shuffle({deck: Object.keys(this.players)}).cards;
-    this.king = this.playerOrder[this.kingMarker];
     this.stage = STAGES.SELECT_QUESTERS;
 };
+
+Game.prototype._startSelectQuesters = function (){
+    if (this.stage !== STAGES.SELECT_QUESTERS) {
+        throw new Error('called startSelectQuesters while not in ' + STAGES.SELECT_QUESTERS + ' stage');
+    }
+
+}
+
+Game.prototype.selectQuester = function (playerId) {
+    if (this.stage !== STAGES.SELECT_QUESTERS) {
+        throw new Error('called selectQuester while not in ' + STAGES.SELECT_QUESTERS + ' stage');
+    }
+    this.selectedQuesters.push(playerId);
+
+};
+
+
 
 
 exports.STAGES = STAGES;

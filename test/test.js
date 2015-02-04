@@ -7,7 +7,7 @@ var _ = require('underscore');
 var engine = require('../game/engine');
 var Game = engine.Game;
 var Player = require('../game/player');
-var PLAYER_SETUP = require('../config/player_setup');
+var PLAYER_SETUP = require('../config/rules');
 var VIEW = PLAYER_SETUP.VIEW;
 var STAGES = engine.STAGES;
 
@@ -145,7 +145,7 @@ test('test player order', function (t) {
         t.ok(game.playerOrder.indexOf(player.id) !== -1, 'Each player should be given a spot in the order');
     });
 
-    t.equal(game.king, game.playerOrder[0], 'The first player should be the king first');
+    t.equal(game.currentKing(), game.playerOrder[0], 'The first player should be the king first');
     t.equal(game.stage, STAGES.SELECT_QUESTERS, 'The game stage after the game starts should be SELECT QUESTERS');
 
     t.end();

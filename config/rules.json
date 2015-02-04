@@ -1,0 +1,215 @@
+{
+  "PLAYERS": {
+    "5": {
+      "numGood": 3,
+      "numBad": 2,
+      "quests": {
+        "1": {
+          "numPlayers": 2,
+          "numToFail": 1
+        },
+        "2": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "3": {
+          "numPlayers": 2,
+          "numToFail": 1
+        },
+        "4": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "5": {
+          "numPlayers": 3,
+          "numToFail": 1
+        }
+      }
+    },
+    "6": {
+      "numGood": 4,
+      "numBad": 2,
+      "quests": {
+        "1": {
+          "numPlayers": 2,
+          "numToFail": 1
+        },
+        "2": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "3": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "4": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "5": {
+          "numPlayers": 4,
+          "numToFail": 1
+        }
+      }
+    },
+    "7": {
+      "numGood": 4,
+      "numBad": 3,
+      "quests": {
+        "1": {
+          "numPlayers": 2,
+          "numToFail": 1
+        },
+        "2": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "3": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "4": {
+          "numPlayers": 4,
+          "numToFail": 2
+        },
+        "5": {
+          "numPlayers": 4,
+          "numToFail": 1
+        }
+      }
+    },
+    "8": {
+      "numGood": 5,
+      "numBad": 3,
+      "quests": {
+        "1": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "2": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "3": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "4": {
+          "numPlayers": 5,
+          "numToFail": 2
+        },
+        "5": {
+          "numPlayers": 5,
+          "numToFail": 1
+        }
+      }
+    },
+    "9": {
+      "numGood": 6,
+      "numBad": 3,
+      "quests": {
+        "1": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "2": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "3": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "4": {
+          "numPlayers": 5,
+          "numToFail": 2
+        },
+        "5": {
+          "numPlayers": 5,
+          "numToFail": 1
+        }
+      }
+    },
+    "10": {
+      "numGood": 6,
+      "numBad": 4,
+      "quests": {
+        "1": {
+          "numPlayers": 3,
+          "numToFail": 1
+        },
+        "2": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "3": {
+          "numPlayers": 4,
+          "numToFail": 1
+        },
+        "4": {
+          "numPlayers": 5,
+          "numToFail": 2
+        },
+        "5": {
+          "numPlayers": 5,
+          "numToFail": 1
+        }
+      }
+    }
+  },
+  "defaultSpecialRoles": [
+    "MERLIN",
+    "ASSASSIN"
+  ],
+  "maxNumberOfPlayers": 10,
+  "GOOD_ROLES": {
+    "VILLAGE_IDIOT": "VILLAGE_IDIOT",
+    "MERLIN": "MERLIN",
+    "PERCIVAL": "PERCIVAL"
+  },
+  "BAD_ROLES": {
+    "REGULAR_MINION": "REGULAR_MINION",
+    "ASSASSIN": "ASSASSIN",
+    "MORGANA": "MORGANA",
+    "MORDRED": "MORDRED",
+    "OBERON": "OBERON"
+  },
+  "VIEW": {
+    "MERLIN": [
+      "ASSASSIN",
+      "MORGANA",
+      "OBERON",
+      "REGULAR_MINION"
+    ],
+    "PERCIVAL": [
+      "MORGANA",
+      "MERLIN"
+    ],
+    "VILLAGE_IDIOT": [],
+    "REGULAR_MINION": [
+      "ASSASSIN",
+      "MORDRED",
+      "MORGANA",
+      "REGULAR_MINION"
+    ],
+    "ASSASSIN": [
+      "ASSASSIN",
+      "MORDRED",
+      "MORGANA",
+      "REGULAR_MINION"
+    ],
+    "MORGANA": [
+      "ASSASSIN",
+      "MORDRED",
+      "MORGANA",
+      "REGULAR_MINION"
+    ],
+    "MORDRED": [
+      "ASSASSIN",
+      "MORDRED",
+      "MORGANA",
+      "REGULAR_MINION"
+    ],
+    "OBERON": []
+  }
+}
