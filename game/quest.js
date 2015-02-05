@@ -22,13 +22,16 @@ function Quest(numPlayers, numToFail) {
     this.numRejections = 0;
     this.king = null;
     this.selectedQuesters = [];
-    this.state = QUEST_STATE.UNDECIDED;
+    this.result = QUEST_STATE.UNDECIDED;
 }
 
 
 Quest.prototype.selectQuester = function (playerId) {
     if (this.selectedQuesters.length >= this.numPlayers) {
         throw new Error('quest is already full');
+    }
+    if (this.selectedQuesters.indexOf(playerId) !== -1) {
+        throw new Error('cannot add quester that has already been selected');
     }
     this.selectedQuesters.push(playerId);
 };
@@ -44,7 +47,11 @@ Quest.prototype.ready = function(){
     return this.selectedQuesters.length === this.numPlayers;
 };
 
+
 Quest.prototype.voteOnAcceptOrReject = function (votes) {
+    if(!this.ready()) {
+        throw new Error('cannot vote on accept or reject if quest is not ready');
+    }
     var netAccepts = _.reduce(votes, function (memo, num) {
         return memo + num;
     }, 0);
@@ -57,6 +64,8 @@ Quest.prototype.voteOnSuccessOrFail = function (votes) {
     }, 0);
     return numFails >= this.numToFail;
 }
+
+
 
 exports.Quest = Quest;
 exports.QUEST_STATE = QUEST_STATE;
