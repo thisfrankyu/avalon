@@ -222,7 +222,25 @@ Game.prototype.removeQuester = function(playerId, requestingPlayerId) {
     this.currentQuest().removeQuester(playerId);
 };
 
+Game.prototype.submitQuestersForVoting = function(requestingPlayerId) {
+    this._validateCurrentKing(requestingPlayerId);
+    this.stage = STAGES.VOTE_ON_QUESTERS;
+};
 
+
+
+Game.prototype.vote = function(votingPlayerId, vote){
+
+    this._validatePlayerInGame(votingPlayerId);
+    this.currentVotesOnQuest[votingPlayerId] = vote;
+    //TODO: notify clients/controller that votingPlayerId has voted
+    if (this.currentVotesOnQuest.length == this.players.length) {
+        var votePassed = this.currentQuest().voteOnAcceptOrReject(_.values(this.currentVotesOnQuest));
+        if (!votePassed) {
+            this.kingIndex++;
+        }
+    }
+};
 
 
 
