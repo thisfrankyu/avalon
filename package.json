@@ -14,7 +14,6 @@
     "morgan": "~1.5.1",
     "serve-favicon": "~2.2.0",
     "shuffle": "~0.2.2",
-    "srand": "~1.1.4",
     "underscore": "~1.7.0",
     "util": "~0.10.3"
   },

@@ -135,7 +135,7 @@ test('test player order', function (t) {
         players = [];
 
     _.times(6, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
 
@@ -159,7 +159,7 @@ test('test player views (all special roles)', function (t) {
         players = [];
 
     _.times(10, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
 
@@ -186,7 +186,7 @@ test('test player views (with regular minion)', function (t) {
         players = [];
 
     _.times(10, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
 
@@ -213,7 +213,7 @@ test('test start game before 5 have joined)', function (t) {
         players = [];
 
     _.times(4, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
 
@@ -231,7 +231,7 @@ test('test add too many players', function (t) {
         players = [];
 
     _.times(PLAYER_SETUP.maxNumberOfPlayers, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
 
@@ -247,14 +247,15 @@ test('test add not enough players', function (t) {
         players = [];
 
     _.times(4, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
-    t.throws(game.start.bind(game), /Not enough players have joined yet/, 'Cannot start a game before at least 5 people have joined');
+    t.throws(game.start.bind(game), /Not enough players have joined yet/,
+        'Cannot start a game before at least 5 people have joined');
     t.end();
 });
 
-test('test no adding players after game has started', function(t){
+test('test no adding players after game has started', function (t) {
     var game = new Game('bobgame', 'player0', {
             goodSpecialRoles: ["MERLIN", "PERCIVAL"],
             badSpecialRoles: ["ASSASSIN"]
@@ -262,10 +263,62 @@ test('test no adding players after game has started', function(t){
         players = [];
 
     _.times(5, function (n) {
-        players.push(new Player('player' + n))
+        players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
     game.start();
-    t.throws(game.addPlayer.bind(game, new Player('playerX')), /cannot add a player after the game has started/, 'cannot add a player after the game has started');
+    t.throws(game._createQuests.bind(game), /cannot create quests after the game has started/,
+        'make sure you cannot call private create quests');
+    t.throws(game.start.bind(game), /tried to start game after game started/,
+        'make sure you cannot call start after it has been called');
+    t.throws(game.addPlayer.bind(game, new Player('playerX')), /cannot add a player after the game has started/,
+        'cannot add a player after the game has started');
     t.end();
 });
+
+test('test select/remove Quester', function (t) {
+    var game = new Game('bobgame', 'player0', {
+            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
+            badSpecialRoles: ["ASSASSIN"]
+        }),
+        players = [];
+
+    _.times(6, function (n) {
+        players.push(new Player('player' + n))
+        game.addPlayer(players[n]);
+    });
+
+    t.throws(game.selectQuester.bind(game), /called selectQuester while not in SELECT_QUESTERS stage/,
+       'make sure that you cannot select a quester when you are not in the select questers stage');
+
+    //START
+    game.start();
+
+
+    t.throws(game.selectQuester.bind(game, players[0].id, game.playerOrder[1]), /Only the king may select players for a quest/,
+        'Make sure that a non-king player cannot choose the questers');
+    t.throws(game.selectQuester.bind(game, 'playerX', game.playerOrder[0]), /Cannot select non-existent player/,
+        'Make sure that only real players can be added to a quest');
+    var king = game.currentKing();
+
+    game.selectQuester(players[0].id, king);
+    game.selectQuester(players[1].id, king);
+
+    var selectedQuesters = game.currentQuest().selectedQuesters;
+    var sortedSelectedQuesters = _.sortBy(selectedQuesters, function(str){return str;});
+    t.deepEqual(sortedSelectedQuesters, [players[0].id, players[1].id].sort(),
+        'Make sure that the players we added are in selected questers');
+
+    game.removeQuester(players[1].id, king);
+
+    t.deepEqual(selectedQuesters, [players[0].id],
+        'make sure that after removing player[1], only player[0] remains');
+
+    game.selectQuester(players[2].id, king);
+
+    var sortedSelectedQuesters = _.sortBy(selectedQuesters, function(str){return str;});
+    t.deepEqual(sortedSelectedQuesters, [players[0].id, players[2].id].sort(),
+       'make sure that after removing player[1], and adding player[2], 0 and 2 are in the selected questers list');
+    t.end();
+});
+

@@ -13,12 +13,12 @@ var VIEW = RULES.VIEW;
 
 
 var STAGES = {
-    NOT_STARTED: 0,
-    SELECT_QUESTERS: 1,
-    VOTE_ON_QUESTERS: 2,
-    QUEST: 3,
-    KILL_MERLIN: 4,
-    DONE: 5
+    NOT_STARTED: 'NOT_STARTED',
+    SELECT_QUESTERS: 'SELECT_QUESTERS',
+    VOTE_ON_QUESTERS: 'VOTE_ON_QUESTERS',
+    QUEST: 'QUEST',
+    KILL_MERLIN: 'KILL_MERLIN',
+    DONE: 'DONE'
 };
 
 function Game(gameId, ownerId, options) {
@@ -28,18 +28,18 @@ function Game(gameId, ownerId, options) {
 
     this.stage = STAGES.NOT_STARTED;
 
-
-
     this.numSuccesses = 0;
     this.numFails = 0;
     this.numRejections = 0;
 
     this.questIndex = 0;
     this.quests = [];
+    this.currentVotesOnQuest = {};
 
 
-    this.players = {};
-    this.roles = {};
+    this.players = {}; //playerId --> players
+    this.roles = {}; //playerId --> role
+    //TODO: be able to change the special roles we're playing with at any time before start
     this.goodSpecialRoles = this.options.goodSpecialRoles || {};
     this.badSpecialRoles = this.options.badSpecialRoles || {};
 
@@ -47,6 +47,8 @@ function Game(gameId, ownerId, options) {
     this.playerOrder = [];
 
     this.selectedQuesters = [];
+
+
 }
 
 Game.prototype.currentKing = function(){
@@ -149,6 +151,7 @@ Game.prototype.addPlayer = function (player) {
     if (this.getNumPlayers() >= RULES.maxNumberOfPlayers) {
         throw new Error('cannot add more players than ' + RULES.maxNumberOfPlayers);
     }
+    //TODO don't allow same player to be added twice
     this.players[player.id] = player;
 
 };
@@ -159,7 +162,7 @@ Game.prototype._createQuests = function(){
     }
 
     var self = this,
-        questConfigs = PLAYERS[this.getNumPlayers()].quests
+        questConfigs = PLAYERS[this.getNumPlayers()].quests;
     _.each(questConfigs, function(questConfig, index){
         self.quests[index - 1] = new Quest(questConfig.numPlayers, questConfig.numToFail);
     });
@@ -188,20 +191,38 @@ Game.prototype.start = function () {
     this.stage = STAGES.SELECT_QUESTERS;
 };
 
-Game.prototype._startSelectQuesters = function (){
-    if (this.stage !== STAGES.SELECT_QUESTERS) {
-        throw new Error('called startSelectQuesters while not in ' + STAGES.SELECT_QUESTERS + ' stage');
+Game.prototype.selectQuester = function (playerId, requestingPlayerId) {
+    this._validateSelectQuester(playerId, requestingPlayerId);
+    this.currentQuest().selectQuester(playerId);
+
+};
+
+Game.prototype._validatePlayerInGame = function(playerId)  {
+    if (!this.players.hasOwnProperty(playerId)) {
+        throw new Error('Cannot select non-existent player');
     }
+};
 
-}
+Game.prototype._validateCurrentKing = function(requestingPlayerId) {
+    if (requestingPlayerId !== this.currentKing()) {
+        throw new Error('Only the king may select players for a quest');
+    }
+};
 
-Game.prototype.selectQuester = function (playerId) {
+Game.prototype._validateSelectQuester  = function(playerId, requestingPlayerId) {
     if (this.stage !== STAGES.SELECT_QUESTERS) {
         throw new Error('called selectQuester while not in ' + STAGES.SELECT_QUESTERS + ' stage');
     }
-    this.selectedQuesters.push(playerId);
-
+    this._validateCurrentKing(requestingPlayerId);
+    this._validatePlayerInGame(playerId);
 };
+
+Game.prototype.removeQuester = function(playerId, requestingPlayerId) {
+    this._validateSelectQuester(playerId, requestingPlayerId);
+    this.currentQuest().removeQuester(playerId);
+};
+
+
 
 
 

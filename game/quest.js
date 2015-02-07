@@ -8,19 +8,18 @@ var VOTE = {
     ACCEPT: 1,
     FAIL: -1,
     SUCCESS: 1
-}
+};
 
 var QUEST_STATE = {
     UNDECIDED: 0,
     FAILED: -1,
     SUCCEEDED: 1
-}
+};
 
 function Quest(numPlayers, numToFail) {
     this.numPlayers = numPlayers;
     this.numToFail = numToFail;
     this.numRejections = 0;
-    this.king = null;
     this.selectedQuesters = [];
     this.result = QUEST_STATE.UNDECIDED;
 }
@@ -59,11 +58,15 @@ Quest.prototype.voteOnAcceptOrReject = function (votes) {
 };
 
 Quest.prototype.voteOnSuccessOrFail = function (votes) {
+    if (votes.length > this.numPlayers) {
+        throw new Error('More votes than number allowed');
+    }
+
     var numFails = _.reduce(votes, function (memo, num) {
         return memo + (num === VOTE.FAIL ? 1 : 0);
     }, 0);
-    return numFails >= this.numToFail;
-}
+    return numFails < this.numToFail;
+};
 
 
 

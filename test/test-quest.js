@@ -65,3 +65,17 @@ test('test voteOnAcceotOrReject', function (t) {
     t.notok(quest.voteOnAcceptOrReject(equalVote), 'make sure equal vote returns fail');
     t.end();
 });
+
+
+test('test voteOnSuccessOrFail', function (t) {
+    var quest = new Quest(4, 2),
+        passingVote = [VOTE.FAIL, VOTE.SUCCESS, VOTE.SUCCESS, VOTE.SUCCESS],
+        failingVote = [VOTE.FAIL, VOTE.FAIL, VOTE.SUCCESS, VOTE.SUCCESS],
+        passingVote2 = [VOTE.SUCCESS, VOTE.SUCCESS, VOTE.SUCCESS, VOTE.SUCCESS],
+        tooManyVotes = [VOTE.SUCCESS, VOTE.SUCCESS, VOTE.SUCCESS, VOTE.SUCCESS, VOTE.SUCCESS];
+    t.ok(quest.voteOnSuccessOrFail(passingVote), 'make sure passing vote returns success');
+    t.notok(quest.voteOnSuccessOrFail(failingVote), 'make sure failing vote returns fail');
+    t.ok(quest.voteOnSuccessOrFail(passingVote2), 'make sure that other passing vote returns success');
+    t.throws(quest.voteOnSuccessOrFail.bind(quest, tooManyVotes), /More votes than number allowed/, 'make sure that you cannot vote with too many players');
+    t.end();
+});
