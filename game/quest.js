@@ -68,6 +68,10 @@ Quest.prototype.voteOnSuccessOrFail = function (votes) {
     return numFails < this.numToFail;
 };
 
+Quest.prototype.clearSelectedQuesters = function() {
+  this.selectedQuesters = [];
+};
+
 
 
 exports.Quest = Quest;
