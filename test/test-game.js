@@ -301,7 +301,7 @@ test('test select/remove Quester', function (t) {
 
     t.throws(game.selectQuester.bind(game, players[0].id, game.playerOrder[1]), /Only the king may select players for a quest/,
         'Make sure that a non-king player cannot choose the questers');
-    t.throws(game.selectQuester.bind(game, 'playerX', game.playerOrder[0]), /Cannot select non-existent player/,
+    t.throws(game.selectQuester.bind(game, 'playerX', game.playerOrder[0]), /is not in the game/,
         'Make sure that only real players can be added to a quest');
     var king = game.currentKing();
 
@@ -407,7 +407,7 @@ test('test vote on questers REJECT', function (t) {
     game.selectQuester(players[1].id, king);
     game.submitQuestersForVoting(king);
     voteOnAcceptOrReject(game, 4);
-    t.equal(game.stage, STAGES.DONE, 'if a quest is rejected five times, the game is done');
+    t.equal(game.stage, STAGES.BAD_WINS, 'if a quest is rejected five times, bad wins');
     t.end();
 });
 
@@ -462,7 +462,7 @@ test('test go on quest', function (t) {
     t.end();
 });
 
-test('test good wins on 3 succeeded quest', function(t){
+test('test good wins on 3 succeeded quest', function (t) {
     var game = new Game('bobgame', 'player0', {
             goodSpecialRoles: ["MERLIN", "PERCIVAL"],
             badSpecialRoles: ["ASSASSIN"]
@@ -483,7 +483,7 @@ test('test good wins on 3 succeeded quest', function(t){
 });
 
 
-test('test bad wins on 3 failed quests', function(t){
+test('test bad wins on 3 failed quests', function (t) {
     var game = new Game('bobgame', 'player0', {
             goodSpecialRoles: ["MERLIN", "PERCIVAL"],
             badSpecialRoles: ["ASSASSIN"]
@@ -499,12 +499,12 @@ test('test bad wins on 3 failed quests', function(t){
     goOnQuestWithNumFails(t, game, 1); //this should fail
     goOnQuestWithNumFails(t, game, 1); //this should fail
     goOnQuestWithNumFails(t, game, 1); //this should fail
-    t.equal(game.stage, STAGES.DONE, 'game should be in DONE after 3 fails');
+    t.equal(game.stage, STAGES.BAD_WINS, 'game should be in BAD_WINS after 3 fails');
     t.end();
 });
 
 
-test('test good wins on 3-2 ', function(t){
+test('test good wins on 3-2 ', function (t) {
     var game = new Game('bobgame', 'player0', {
             goodSpecialRoles: ["MERLIN", "PERCIVAL"],
             badSpecialRoles: ["ASSASSIN"]
@@ -525,6 +525,100 @@ test('test good wins on 3-2 ', function(t){
     t.equal(game.stage, STAGES.KILL_MERLIN, 'game should be in KILL MERLIN after 3 succeeds');
     t.end();
 });
+
+test('test good wins on 3-2 ', function (t) {
+    var game = new Game('bobgame', 'player0', {
+            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
+            badSpecialRoles: ["ASSASSIN", "MORDRED"]
+        }),
+        players = [],
+        rolesToPlayers,
+        ASSASSIN = RULES.BAD_ROLES.ASSASSIN;
+
+    _.times(7, function (n) {
+        players.push(new Player('player' + n));
+        game.addPlayer(players[n]);
+    });
+    game.start();
+    rolesToPlayers = _.invert(game.roles);
+    goOnQuestWithNumFails(t, game, 0); //this should pass
+    goOnQuestWithNumFails(t, game, 1); //this should fail
+    goOnQuestWithNumFails(t, game, 1); //this should fail
+    goOnQuestWithNumFails(t, game, 1); //this should pass
+    t.throws(game.targetMerlin.bind(game, rolesToPlayers[RULES.GOOD_ROLES.PERCIVAL], rolesToPlayers[RULES.GOOD_ROLES.MERLIN]),
+        /tried to target merlin/, 'make you cannot target merlin before kill merlin stage');
+    goOnQuestWithNumFails(t, game, 0); //this should pass
+    t.equal(game.stage, STAGES.KILL_MERLIN, 'game should be in KILL MERLIN after 3 succeeds');
+    t.throws(game.targetMerlin.bind(game, rolesToPlayers[RULES.GOOD_ROLES.PERCIVAL], rolesToPlayers[RULES.GOOD_ROLES.MERLIN]),
+        /is not bad/, 'make sure a good player cannot target a merlin');
+    t.throws(game.targetMerlin.bind(game, rolesToPlayers[RULES.GOOD_ROLES.MERLIN], rolesToPlayers[RULES.BAD_ROLES.MORDRED]),
+        /only the assassin can target a possible merlin/, 'make sure if the assassin is in the game, another bad person cannot try to target a merlin');
+
+    t.throws(game.killTargetMerlin.bind(game, rolesToPlayers[ASSASSIN]), /must target a merlin before killing/, 'make sure that cannot kill a merlin before a merlin is targeted');
+    game.targetMerlin(rolesToPlayers[RULES.GOOD_ROLES.PERCIVAL], rolesToPlayers[ASSASSIN]);
+    game.killTargetMerlin(rolesToPlayers[ASSASSIN]);
+    t.equal(game.stage, STAGES.GOOD_WINS, 'if bad misses merlin, then good should win');
+    t.end();
+});
+
+
+test('test bad wins on 3-2 kill merlin', function (t) {
+    var game = new Game('bobgame', 'player0', {
+            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
+            badSpecialRoles: ["ASSASSIN", "MORDRED"]
+        }),
+        players = [],
+        rolesToPlayers,
+        ASSASSIN = RULES.BAD_ROLES.ASSASSIN;
+
+    _.times(7, function (n) {
+        players.push(new Player('player' + n));
+        game.addPlayer(players[n]);
+    });
+    game.start();
+    rolesToPlayers = _.invert(game.roles);
+    goOnQuestWithNumFails(t, game, 0); //this should pass
+    goOnQuestWithNumFails(t, game, 1); //this should fail
+    goOnQuestWithNumFails(t, game, 1); //this should fail
+    goOnQuestWithNumFails(t, game, 1); //this should pass
+    goOnQuestWithNumFails(t, game, 0); //this should pass
+    game.targetMerlin(rolesToPlayers[RULES.GOOD_ROLES.MERLIN], rolesToPlayers[ASSASSIN]);
+    game.killTargetMerlin(rolesToPlayers[ASSASSIN]);
+    t.equal(game.stage, STAGES.BAD_WINS, 'if bad hits merlin, then bad should win');
+    t.end();
+});
+
+
+test('test bad wins on 3-2 kill merlin', function (t) {
+    var game = new Game('bobgame', 'player0', {
+            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
+            badSpecialRoles: ["MORGANA", "MORDRED"]
+        }),
+        players = [],
+        rolesToPlayers,
+        MORGANA = RULES.BAD_ROLES.MORGANA,
+        MORDRED = RULES.BAD_ROLES.MORDRED;
+
+    _.times(7, function (n) {
+        players.push(new Player('player' + n));
+        game.addPlayer(players[n]);
+    });
+    game.start();
+    rolesToPlayers = _.invert(game.roles);
+    goOnQuestWithNumFails(t, game, 0); //this should pass
+    goOnQuestWithNumFails(t, game, 1); //this should fail
+    goOnQuestWithNumFails(t, game, 1); //this should fail
+    goOnQuestWithNumFails(t, game, 1); //this should pass
+    goOnQuestWithNumFails(t, game, 0); //this should pass
+    game.targetMerlin(rolesToPlayers[RULES.GOOD_ROLES.MERLIN], rolesToPlayers[MORGANA]);
+    game.targetMerlin(rolesToPlayers[RULES.GOOD_ROLES.MERLIN], rolesToPlayers[MORDRED]);
+    game.killTargetMerlin(rolesToPlayers[MORGANA]);
+    t.equal(game.stage, STAGES.BAD_WINS, 'if bad hits merlin, then bad should win');
+    t.end();
+});
+
+
+
 
 function goOnQuestWithNumFails(t, game, numBad) {
     var king = game.currentKing(),

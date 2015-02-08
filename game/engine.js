@@ -21,7 +21,13 @@ var STAGES = {
     VOTE_ON_QUESTERS: 'VOTE_ON_QUESTERS',
     QUEST: 'QUEST',
     KILL_MERLIN: 'KILL_MERLIN',
+    GOOD_WINS: 'GOOD_WINS',
+    BAD_WINS: 'BAD_WINS',
     DONE: 'DONE'
+};
+var ALIGNMENT = {
+    GOOD: 'GOOD',
+    BAD: 'BAD'
 };
 
 function Game(gameId, ownerId, options) {
@@ -40,7 +46,6 @@ function Game(gameId, ownerId, options) {
     this.currentVotesOnQuest = {};
     this.currentSuccessFailVotes = {};
 
-
     this.players = {}; //playerId --> players
     this.roles = {}; //playerId --> role
     //TODO: be able to change the special roles we're playing with at any time before start
@@ -50,9 +55,7 @@ function Game(gameId, ownerId, options) {
     this.kingIndex = 0;
     this.playerOrder = [];
 
-    this.selectedQuesters = [];
-
-
+    this.targetedMerlin = null;
 }
 
 //Accessors
@@ -92,6 +95,10 @@ Game.prototype.setGoodSpecialRoles = function (roles) {
 Game.prototype.setBadSpecialRoles = function (roles) {
     this.badSpecialRoles = roles;
 };
+Game.prototype.getAlignment = function (playerId) {
+    this._validatePlayerInGame(playerId);
+    return GOOD_ROLES.hasOwnProperty(this.roles[playerId]) ? ALIGNMENT.GOOD : ALIGNMENT.BAD;
+}
 
 //Start
 Game.prototype.start = function () {
@@ -233,7 +240,7 @@ Game.prototype._validateCurrentKing = function (requestingPlayerId) {
 
 Game.prototype._validatePlayerInGame = function (playerId) {
     if (!this.players.hasOwnProperty(playerId)) {
-        throw new Error('Cannot select non-existent player');
+        throw new Error(playerId + ' is not in the game');
     }
 };
 
@@ -278,7 +285,7 @@ Game.prototype._questRejected = function () {
     this.currentQuest().numRejections++;
     if (this.currentQuest().numRejections >= 5) {
         //TODO check if game over
-        this.stage = STAGES.DONE;
+        this.stage = STAGES.BAD_WINS;
         return;
     }
     this.currentQuest().clearSelectedQuesters();
@@ -310,7 +317,7 @@ Game.prototype._validatePlayerOnQuest = function (votingPlayerId, vote) {
     if (this.currentQuest().selectedQuesters.indexOf(votingPlayerId) === -1) {
         throw new Error('Player is not on quest!');
     }
-    if (RULES.GOOD_ROLES.hasOwnProperty(this.roles[votingPlayerId]) && vote === VOTE.FAIL){
+    if (this.getAlignment(votingPlayerId) === ALIGNMENT.GOOD && vote === VOTE.FAIL) {
         throw new Error('Good players cannot vote fail on a quest');
     }
 };
@@ -332,7 +339,7 @@ Game.prototype._questFailed = function () {
 
     this.currentQuest().result = QUEST_STATE.FAILED;
     if (this.numFails >= 3) {
-        this.stage = STAGES.DONE;
+        this.stage = STAGES.BAD_WINS;
     } else {
         this.stage = STAGES.SELECT_QUESTERS;
     }
@@ -346,6 +353,37 @@ Game.prototype._questSucceeded = function () {
     } else {
         this.stage = STAGES.SELECT_QUESTERS;
     }
+};
+
+//Kill Merlin phase
+Game.prototype._validatePlayerIsBad = function (playerId) {
+    if (this.getAlignment(playerId) !== ALIGNMENT.BAD) {
+        throw new Error(playerId + ' is not bad');
+    }
+};
+
+Game.prototype._validateKillMerlin = function (targetId, requestingPlayerId) {
+    if (this.stage !== STAGES.KILL_MERLIN) {
+        throw new Error('tried to target merlin before we got to the kill merlin stage');
+    }
+    this._validatePlayerInGame(requestingPlayerId);
+    this._validatePlayerInGame(targetId);
+    this._validatePlayerIsBad(requestingPlayerId);
+    if (_.values(this.roles).indexOf(BAD_ROLES.ASSASSIN) !== -1 && this.roles[requestingPlayerId] !== BAD_ROLES.ASSASSIN){
+        throw new Error('only the assassin can target a possible merlin if there is an assassin in game, requestingPlayerId: ' + requestingPlayerId)
+    }
+};
+Game.prototype.targetMerlin = function (targetId, requestingPlayerId) {
+    this._validateKillMerlin(targetId, requestingPlayerId);
+    this.targetedMerlin = targetId;
+};
+
+Game.prototype.killTargetMerlin = function(requestingPlayerId){
+    if (this.targetedMerlin === null){
+        throw new Error('must target a merlin before killing');
+    }
+    this._validateKillMerlin(this.targetedMerlin, requestingPlayerId);
+    this.stage = this.roles[this.targetedMerlin] === GOOD_ROLES.MERLIN ? STAGES.BAD_WINS : STAGES.GOOD_WINS;
 };
 
 

@@ -35,20 +35,20 @@ Quest.prototype.selectQuester = function (playerId) {
     this.selectedQuesters.push(playerId);
 };
 
-Quest.prototype.removeQuester = function(playerId){
+Quest.prototype.removeQuester = function (playerId) {
     var index = this.selectedQuesters.indexOf(playerId);
     if (index > -1) {
         this.selectedQuesters.splice(index, 1);
     }
 };
 
-Quest.prototype.ready = function(){
+Quest.prototype.ready = function () {
     return this.selectedQuesters.length === this.numPlayers;
 };
 
 
 Quest.prototype.voteOnAcceptOrReject = function (votes) {
-    if(!this.ready()) {
+    if (!this.ready()) {
         throw new Error('cannot vote on accept or reject if quest is not ready');
     }
     var netAccepts = _.reduce(votes, function (memo, num) {
@@ -68,10 +68,9 @@ Quest.prototype.voteOnSuccessOrFail = function (votes) {
     return numFails < this.numToFail;
 };
 
-Quest.prototype.clearSelectedQuesters = function() {
-  this.selectedQuesters = [];
+Quest.prototype.clearSelectedQuesters = function () {
+    this.selectedQuesters = [];
 };
-
 
 
 exports.Quest = Quest;
