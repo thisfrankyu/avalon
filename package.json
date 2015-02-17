@@ -3,7 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www"
+    "covert": "./node_modules/covert/bin/cmd.js ./test/*.js",
+    "test": "node ./test/*.js"
   },
   "dependencies": {
     "body-parser": "~1.10.2",
@@ -15,14 +16,11 @@
     "serve-favicon": "~2.2.0",
     "shuffle": "~0.2.2",
     "underscore": "~1.7.0",
-    "util": "~0.10.3"
+    "util": "~0.10.3",
+    "events": "~1.0.2"
   },
   "devDependencies": {
     "tape": "~3.5.0",
     "covert": "~1.0.1"
-  },
-  "scripts" : {
-    "covert": "./node_modules/covert/bin/cmd.js ./test/*.js",
-    "test" : "node ./test/*.js"
   }
 }
