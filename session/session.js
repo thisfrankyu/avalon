@@ -1,13 +1,12 @@
-var emitter = require('events').EventEmitter;
+var emitter = require('../communication/emitter');
 
-var server = require('./server');
-var http = server.http;
+var server = require('./../game/game-controller');
+var http = gameController.http;
 var io = require('socket.io')(http);
 
 function Session(sessionSocket) {
     this.id = sessionSocket.id;
     this.socket = sessionSocket;
-    this.game = null;
 }
 
 function SessionController() {
@@ -25,7 +24,6 @@ SessionController.prototype.init = function() {
 
         sessionSocket.on('register', function(registerMsg){
             emitter.emit('register', registerMsg);
-
         });
 
         sessionSocket.on('createGame', function (msg) {

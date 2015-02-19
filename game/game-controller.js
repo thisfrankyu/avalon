@@ -1,16 +1,16 @@
 /**
  * Created by frank on 2/1/15.
  */
-var emitter = require('events').EventEmitter;
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 var _ = require('underscore');
 
-var engine = require('../game/engine');
-var Player = require('../game/player');
+var engine = require('./engine');
+var Player = require('./player');
 var Game = engine.Game;
+var emitter = require('../communication/emitter');
 
 function GameController() {
     this.sessions = {};
@@ -39,13 +39,17 @@ GameController.prototype.joinGame = function (gameId, player) {
     return game;
 };
 
+
+GameController.prototype._handleRegisterPlayer = function(msg) {
+    var playerId = msg.playerId;
+    this.players[playerId] = new Player(playerId);
+    emitter.emit('playerRegistered', {playerId: playerId});
+};
+
+
 GameController.prototype.init = function () {
     var self = this;
-    emitter.on('registerPlayer', function (msg) {
-        var playerId = msg.playerId;
-        self.players[playerId] = new Player(playerId);
-        emitter.emit('playerRegistered', {playerId: playerId});
-    });
+    emitter.on('registerPlayer', self._handleRegisterPlayer.bind(self));
     emitter.on('createGame', function (msg) {
         var game = self.createGame(msg.gameId, self.players[msg.playerId], msg.gameOptions);
         emitter.emit('gameCreated', {
@@ -69,3 +73,5 @@ GameController.prototype.init = function () {
 
 exports.app = app;
 exports.http = http;
+
+exports.GameController = GameController;
