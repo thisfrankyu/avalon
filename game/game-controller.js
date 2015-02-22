@@ -60,7 +60,28 @@ GameController.prototype._handleJoinGame = function (msg) {
         badSpecialRoles: game.badSpecialRoles,
         goodSpecialRoles: game.goodSpecialRoles
     });
+};
 
+
+GameController.prototype._handleStartGame = function (msg) {
+    var playerId = msg.playerId,
+        gameId = msg.gameId,
+        game = this.games[gameId];
+
+    if (!this.games.hasOwnProperty(gameId)) {
+        throw new Error('Game with gameId ' + gameId + ' not found');
+    }
+
+    if (playerId !== game.ownerId) {
+        throw new Error('Only the owner may start the game');
+    }
+
+    game.start();
+
+    this.emitter.emit('gameStarted', {
+        gameId: gameId,
+        game: game
+    });
 };
 
 GameController.prototype.init = function () {
@@ -68,6 +89,7 @@ GameController.prototype.init = function () {
     this.emitter.on('registerPlayer', self._handleRegisterPlayer.bind(self));
     this.emitter.on('createGame', self._handleCreateGame.bind(self));
     this.emitter.on('joinGame', self._handleJoinGame.bind(self));
+    this.emitter.on('startGame', self._handleStartGame.bind(self));
 };
 
 exports.app = app;
