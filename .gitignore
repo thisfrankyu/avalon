@@ -10,6 +10,7 @@ node_modules
 .flooignore
 .floo
 .idea/dictionaries/
+.idea/workspace.xml
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
