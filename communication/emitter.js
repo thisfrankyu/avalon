@@ -2,5 +2,9 @@
  * Created by frank on 2/18/15.
  */
 var EventEmitter = require('events').EventEmitter;
-var emitter = new EventEmitter();
-module.exports = emitter;
+
+function newEmitter(){
+    return new EventEmitter();
+}
+
+exports.newEmitter = newEmitter;
