@@ -1,6 +1,3 @@
-/**
- * Created by frank on 2/4/15.
- */
 var test = require('tape');
 var _ = require('underscore');
 
@@ -221,25 +218,9 @@ test('test start game before 5 have joined)', function (t) {
         game.addPlayer(players[n]);
     });
 
-    t.throws(game.start.bind(game), /Not enough players have joined yet/, 'Cannont start a game before at least 5 people have joined');
+    t.throws(game.start.bind(game), /Invalid number of players/, 'Cannot start a game before at least 5 people have joined');
 
 
-    t.end();
-});
-
-test('test add too many players', function (t) {
-    var game = new Game('bobgame', 'player0', {
-            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
-            badSpecialRoles: ["ASSASSIN"]
-        }),
-        players = [];
-
-    _.times(RULES.maxNumberOfPlayers, function (n) {
-        players.push(new Player('player' + n));
-        game.addPlayer(players[n]);
-    });
-
-    t.throws(game.addPlayer.bind(game, new Player('playerX')), /cannot add more players than/, 'make sure that you cannot add more than ' + RULES.maxNumberOfPlayers + ' players');
     t.end();
 });
 
@@ -254,8 +235,24 @@ test('test add not enough players', function (t) {
         players.push(new Player('player' + n));
         game.addPlayer(players[n]);
     });
-    t.throws(game.start.bind(game), /Not enough players have joined yet/,
+    t.throws(game.start.bind(game), /Invalid number of players/,
         'Cannot start a game before at least 5 people have joined');
+    t.end();
+});
+
+test('test add too many players', function (t) {
+    var game = new Game('bobgame', 'player0', {
+            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
+            badSpecialRoles: ["ASSASSIN"]
+        }),
+        players = [];
+
+    _.times(11, function (n) {
+        players.push(new Player('player' + n));
+        game.addPlayer(players[n]);
+    });
+    t.throws(game.start.bind(game), /Invalid number of players/,
+        'Cannot start if too many players are in the game');
     t.end();
 });
 

@@ -80,9 +80,6 @@ Game.prototype.addPlayer = function (player) {
     if (!player || !player.id) {
         throw new Error('malformed player: ', JSON.stringify(player));
     }
-    if (this.getNumPlayers() >= RULES.maxNumberOfPlayers) {
-        throw new Error('cannot add more players than ' + RULES.maxNumberOfPlayers);
-    }
     //TODO don't allow same player to be added twice
     this.players[player.id] = player;
 
@@ -107,8 +104,8 @@ Game.prototype.start = function () {
     }
 
     var self = this;
-    if (this.getNumPlayers() < 5) {
-        throw new Error('Not enough players have joined yet');
+    if (!RULES.PLAYERS.hasOwnProperty(this.getNumPlayers())) {
+        throw new Error('Invalid number of players: ' + this.getNumPlayers());
     }
 
     this._assignRoles();
