@@ -85,7 +85,6 @@ Game.prototype.addPlayer = function (player) {
 
 };
 
-//TODO
 Game.prototype.setGoodSpecialRoles = function (roles) {
     this.goodSpecialRoles = roles;
 };
