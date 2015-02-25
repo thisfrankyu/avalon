@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "covert": "./node_modules/covert/bin/cmd.js ./test/*.js",
-    "test": "node ./test/*.js"
+    "covert": "node ./node_modules/covert/bin/cmd.js ./test/run-tests.js",
+    "test": "node ./test/run-tests.js"
   },
   "dependencies": {
     "body-parser": "~1.10.2",

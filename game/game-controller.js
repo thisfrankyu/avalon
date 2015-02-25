@@ -10,6 +10,7 @@ var _ = require('underscore');
 var engine = require('./engine');
 var Player = require('./player');
 var Game = engine.Game;
+var STAGES = engine.STAGES;
 
 function GameController(emitter) {
     this.emitter = emitter;
@@ -40,7 +41,7 @@ GameController.prototype._handleRegisterPlayer = function (msg) {
 };
 
 GameController.prototype._createGame = function (gameId, playerId, options) {
-    if (_.has(this.games, gameId)){
+    if (_.has(this.games, gameId)) {
         throw new Error(gameId + ' has already been created');
     }
     var game = new Game(gameId, playerId, options);
@@ -142,6 +143,58 @@ GameController.prototype._handleRemoveQuester = function (msg) {
     });
 };
 
+GameController.prototype._submitQuestersForVoting = function (playerId, gameId) {
+    var game = this.games[gameId];
+    this._validateGame(gameId);
+    game.submitQuestersForVoting(playerId);
+    this.emitter.emit('questersSubmitted', {
+        gameId: gameId,
+        selectedQuesters: game.currentQuest().selectedQuesters
+    });
+};
+
+GameController.prototype._handleSubmitQuestersForVoting = function (msg) {
+    var gameId = msg.gameId,
+        requestingPlayerId = msg.requestingPlayerId;
+    this.exec(this._submitQuestersForVoting.bind(this, requestingPlayerId, gameId));
+};
+
+GameController.prototype._voteAcceptReject = function (playerId, vote, gameId) {
+    var game = this.games[gameId],
+        result;
+    this._validateGame(gameId);
+    result = game.voteAcceptReject(playerId, vote);
+
+    this.emitter.emit('votedOnQuesters', {
+        gameId: gameId,
+        playerId: playerId,
+        vote: vote
+    });
+
+    if (result.stage === STAGES.QUEST) {
+        this.emitter.emit('questAccepted', {
+            gameId: gameId,
+            players: game.currentQuest().selectedQuesters,
+            votes: result.votes
+        });
+    }
+    if (result.stage === STAGES.SELECT_QUESTERS) {
+        this.emitter.emit('questRejected', {
+            gameId: gameId,
+            players: game.currentQuest().selectedQuesters,
+            votes: result.votes
+        });
+    }
+    // TODO: what to do when game ends
+};
+
+GameController.prototype._handleVoteAcceptReject = function (msg) {
+    var playerId = msg.playerId,
+        vote = msg.vote,
+        gameId = msg.gameId;
+    this.exec(this._voteAcceptReject.bind(this, playerId, vote, gameId));
+};
+
 
 GameController.prototype.init = function () {
     var self = this;
@@ -151,6 +204,8 @@ GameController.prototype.init = function () {
     this.emitter.on('startGame', self._handleStartGame.bind(self));
     this.emitter.on('selectQuester', self._handleSelectQuester.bind(self));
     this.emitter.on('removeQuester', self._handleRemoveQuester.bind(self));
+    this.emitter.on('submitQuesters', self._handleSubmitQuestersForVoting.bind(self));
+    this.emitter.on('voteAcceptReject', self._handleVoteAcceptReject.bind(self));
 };
 
 exports.app = app;

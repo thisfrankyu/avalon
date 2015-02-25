@@ -43,8 +43,8 @@ function Game(gameId, ownerId, options) {
 
     this.questIndex = 0;
     this.quests = [];
-    this.currentVotesOnQuest = {};
-    this.currentSuccessFailVotes = {};
+    this.currentVotesOnQuest = {}; //playerId --> vote
+    this.currentSuccessFailVotes = {}; //playerId --> vote
 
     this.players = {}; //playerId --> players
     this.roles = {}; //playerId --> role
@@ -241,7 +241,6 @@ Game.prototype._validatePlayerInGame = function (playerId) {
 };
 
 Game.prototype.submitQuestersForVoting = function (requestingPlayerId) {
-    //TODO validate we have enough questers
     this._validateCurrentKing(requestingPlayerId);
     if (!this.currentQuest().ready()) {
         throw new Error('Cannot submit questers until enough questers have been chosen');
@@ -259,11 +258,13 @@ Game.prototype.voteAcceptReject = function (votingPlayerId, vote) {
 
     this._validatePlayerInGame(votingPlayerId);
     this.currentVotesOnQuest[votingPlayerId] = vote;
+    var votes = _.clone(this.currentVotesOnQuest);
     //TODO: notify clients/controller that votingPlayerId has voted
     if (Object.keys(this.currentVotesOnQuest).length ===
         Object.keys(this.players).length) {
         this._resolveVote();
     }
+    return {stage: this.stage, votes: votes};
 };
 
 Game.prototype._resolveVote = function () {
@@ -280,7 +281,6 @@ Game.prototype._resolveVote = function () {
 Game.prototype._questRejected = function () {
     this.currentQuest().numRejections++;
     if (this.currentQuest().numRejections >= 5) {
-        //TODO check if game over
         this.stage = STAGES.BAD_WINS;
         return;
     }
@@ -365,7 +365,7 @@ Game.prototype._validateKillMerlin = function (targetId, requestingPlayerId) {
     this._validatePlayerInGame(requestingPlayerId);
     this._validatePlayerInGame(targetId);
     this._validatePlayerIsBad(requestingPlayerId);
-    if (_.values(this.roles).indexOf(BAD_ROLES.ASSASSIN) !== -1 && this.roles[requestingPlayerId] !== BAD_ROLES.ASSASSIN){
+    if (_.values(this.roles).indexOf(BAD_ROLES.ASSASSIN) !== -1 && this.roles[requestingPlayerId] !== BAD_ROLES.ASSASSIN) {
         throw new Error('only the assassin can target a possible merlin if there is an assassin in game, requestingPlayerId: ' + requestingPlayerId)
     }
 };
@@ -374,8 +374,8 @@ Game.prototype.targetMerlin = function (targetId, requestingPlayerId) {
     this.targetedMerlin = targetId;
 };
 
-Game.prototype.killTargetMerlin = function(requestingPlayerId){
-    if (this.targetedMerlin === null){
+Game.prototype.killTargetMerlin = function (requestingPlayerId) {
+    if (this.targetedMerlin === null) {
         throw new Error('must target a merlin before killing');
     }
     this._validateKillMerlin(this.targetedMerlin, requestingPlayerId);
