@@ -302,11 +302,15 @@ Game.prototype.voteSuccessFail = function (votingPlayerId, vote) {
 
     this._validatePlayerOnQuest(votingPlayerId, vote);
     this.currentSuccessFailVotes[votingPlayerId] = vote;
+    var successFailVotes = this.currentSuccessFailVotes,
+        voteResult = QUEST_STATE.UNDECIDED,
+        questIndex = this.questIndex;
     //TODO: notify clients/controller that votingPlayerId has voted
     if (Object.keys(this.currentSuccessFailVotes).length ===
         this.currentQuest().selectedQuesters.length) {
-        this._resolveSuccessFailVote();
+        voteResult = this._resolveSuccessFailVote();
     }
+    return {stage: this.stage, votes: successFailVotes, voteResult: voteResult, questIndex: questIndex};
 };
 
 Game.prototype._validatePlayerOnQuest = function (votingPlayerId, vote) {
@@ -328,6 +332,7 @@ Game.prototype._resolveSuccessFailVote = function () {
         this._questFailed();
     }
     this.questIndex++;
+    return votePassed ? QUEST_STATE.SUCCEEDED : QUEST_STATE.FAILED;
 };
 
 Game.prototype._questFailed = function () {

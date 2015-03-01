@@ -11,6 +11,7 @@ var engine = require('./engine');
 var Player = require('./player');
 var Game = engine.Game;
 var STAGES = engine.STAGES;
+var QUEST_STATE = require('./quest').QUEST_STATE;
 
 function GameController(emitter) {
     this.emitter = emitter;
@@ -195,6 +196,33 @@ GameController.prototype._handleVoteAcceptReject = function (msg) {
     this.exec(this._voteAcceptReject.bind(this, playerId, vote, gameId));
 };
 
+GameController.prototype._voteSuccessFail = function (playerId, vote, gameId) {
+    var game = this.games[gameId],
+        result;
+    this._validateGame(gameId);
+    result = game.voteSuccessFail(playerId, vote);
+    this.emitter.emit('votedOnSuccessFail', {
+        gameId: gameId,
+        playerId: playerId,
+        vote: vote
+    });
+    if (result.voteResult !== QUEST_STATE.UNDECIDED) {
+        this.emitter.emit('questEnded', {
+            gameId: gameId,
+            votes: result.votes,
+            questResult: result.voteResult,
+            questIndex: result.questIndex,
+            nextQuest: game.currentQuest()
+        });
+    }
+
+};
+
+GameController.prototype._handleVoteSuccessFail = function (msg) {
+    var playerId = msg.playerId,
+        vote = msg.vote,
+        gameId = msg.gameId;
+}
 
 GameController.prototype.init = function () {
     var self = this;
@@ -206,6 +234,8 @@ GameController.prototype.init = function () {
     this.emitter.on('removeQuester', self._handleRemoveQuester.bind(self));
     this.emitter.on('submitQuesters', self._handleSubmitQuestersForVoting.bind(self));
     this.emitter.on('voteAcceptReject', self._handleVoteAcceptReject.bind(self));
+    this.emitter.on('voteSuccessFail', self._handleVoteSuccessFail.bind(self));
+
 };
 
 exports.app = app;
