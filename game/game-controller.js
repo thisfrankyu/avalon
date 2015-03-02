@@ -16,8 +16,8 @@ var QUEST_STATE = require('./quest').QUEST_STATE;
 function GameController(emitter) {
     this.emitter = emitter;
     this.sessions = {};
-    this.games = {};
     this.players = {};
+    this.games = {};
 }
 
 GameController.prototype.exec = function (apiCall) {
@@ -215,13 +215,14 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId) {
             nextQuest: game.currentQuest()
         });
     }
-
 };
 
 GameController.prototype._handleVoteSuccessFail = function (msg) {
     var playerId = msg.playerId,
         vote = msg.vote,
         gameId = msg.gameId;
+
+    this.exec(this._voteSuccessFail.bind(this, playerId, vote, gameId));
 }
 
 GameController.prototype.init = function () {

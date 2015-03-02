@@ -1,11 +1,12 @@
 var test = require('tape');
 var _ = require('underscore');
-var async = require('async');
 
 var GameController = require('../game/game-controller').GameController;
 var newEmitter = require('../communication/emitter').newEmitter;
 var STAGES = require('../game/engine').STAGES;
-var VOTE = require('../game/quest').VOTE;
+var quest = require('../game/quest');
+var VOTE = quest.VOTE;
+var QUEST_STATE = quest.QUEST_STATE;
 
 test('test registerPlayer', function (t) {
     var testEmitter = newEmitter(),
@@ -485,6 +486,74 @@ test('test changing vote on questers', function (t) {
         vote: VOTE.REJECT,
         gameId: gameId
     });
+});
+
+
+test('test vote on success/fail succeeded', function (t) {
+    var testEmitter = newEmitter(),
+        gameController = new GameController(testEmitter),
+        gameId = 'game0',
+        ownerId = 'player0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED'],
+        selectedQuesters = ['player0', 'player1'],
+        currentKing,
+        votedOnQuestersEventCounter = 0,
+        playerIds = [],
+        game;
+
+    t.plan(11);
+
+    initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles);
+
+    game = gameController.games[gameId];
+    currentKing = game.currentKing();
+    testEmitter.emit('selectQuester', {
+        playerId: selectedQuesters[0],
+        requestingPlayerId: currentKing,
+        gameId: gameId
+    });
+
+    testEmitter.emit('selectQuester', {
+        playerId: selectedQuesters[1],
+        requestingPlayerId: currentKing,
+        gameId: gameId
+    });
+
+    testEmitter.emit('submitQuesters', {
+        requestingPlayerId: currentKing,
+        gameId: gameId
+    });
+
+    _.each(game.players, function (player, playerId) {
+        testEmitter.emit('voteAcceptReject', {
+            playerId: playerId,
+            vote: VOTE.ACCEPT,
+            gameId: gameId
+        });
+    });
+
+    testEmitter.on('votedOnSuccessFail', function(msg) {
+        t.equal(msg.gameId, gameId, 'The game returned should match the one we created.');
+        t.equal(msg.vote, VOTE.SUCCESS, 'The votes should both be SUCCESS.');
+        playerIds.push(msg.playerId);
+
+        if (playerIds.length === 2) {
+            t.deepEqual(playerIds, selectedQuesters, 'The playerIds returned should match the order we sent them');
+        }
+    });
+
+    testEmitter.once('questEnded', function(msg) {
+        t.equal(msg.gameId, gameId, 'The game returned should match the one we created.');
+        t.deepEqual(msg.votes, {player0: VOTE.SUCCESS, player1: VOTE.SUCCESS}, 'We should see all the success votes');
+        t.equal(msg.questResult, QUEST_STATE.SUCCEEDED, 'After 2 SUCCESS votes, the quest should have succeeded');
+        t.equal(msg.questIndex, 0, 'The quest that was just finished should have been the first one');
+        t.equal(game.questIndex, 1, 'The quest index should have been incremented after the quest ended');
+        t.equal(msg.nextQuest.result, QUEST_STATE.UNDECIDED, 'The next quest should not be decided yet');
+    });
+
+    testEmitter.emit('voteSuccessFail', {playerId: selectedQuesters[0], gameId: gameId, vote: VOTE.SUCCESS});
+    testEmitter.emit('voteSuccessFail', {playerId: selectedQuesters[1], gameId: gameId, vote: VOTE.SUCCESS});
 });
 
 function initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles) {

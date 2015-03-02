@@ -1,6 +1,3 @@
-/**
- * Created by frank on 2/3/15.
- */
 var _ = require('underscore');
 
 var VOTE = {

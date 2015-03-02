@@ -1,6 +1,3 @@
-/**
- * Created by frank on 1/31/15.
- */
 var _ = require('underscore');
 var Shuffle = require('shuffle');
 
@@ -310,7 +307,12 @@ Game.prototype.voteSuccessFail = function (votingPlayerId, vote) {
         this.currentQuest().selectedQuesters.length) {
         voteResult = this._resolveSuccessFailVote();
     }
-    return {stage: this.stage, votes: successFailVotes, voteResult: voteResult, questIndex: questIndex};
+    return {
+      stage: this.stage,
+      votes: successFailVotes,
+      voteResult: voteResult,
+      questIndex: questIndex
+    };
 };
 
 Game.prototype._validatePlayerOnQuest = function (votingPlayerId, vote) {
