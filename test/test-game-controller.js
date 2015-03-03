@@ -3,6 +3,9 @@ var _ = require('underscore');
 
 var GameController = require('../game/game-controller').GameController;
 var newEmitter = require('../communication/emitter').newEmitter;
+var RULES = require('../game/rules');
+var BAD_ROLES = RULES.BAD_ROLES;
+var GOOD_ROLES = RULES.GOOD_ROLES;
 var STAGES = require('../game/engine').STAGES;
 var quest = require('../game/quest');
 var VOTE = quest.VOTE;
@@ -29,9 +32,8 @@ test('test registerPlayer', function (t) {
 test('test register already registered player', function (t) {
     var testEmitter = newEmitter(),
         gameController = new GameController(testEmitter),
-        gameId = 'game0',
-        playerId = 'player0',
-        badSpecialRoles = [];
+        playerId = 'player0';
+
     gameController.init();
     t.plan(2);
     testEmitter.once('error', function (error) {
@@ -594,6 +596,110 @@ test('test vote on success/fail succeeded', function (t) {
     });
 });
 
+
+test('test attempt to kill Merlin (evil wins)', function (t) {
+    var testEmitter = newEmitter(),
+        gameController = new GameController(testEmitter),
+        gameId = 'game0',
+        ownerId = 'player0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED', 'ASSASSIN'],
+        rolesToPlayers, assassinId, merlinId, game;
+
+    initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles);
+
+    game = gameController.games[gameId];
+    rolesToPlayers = _.invert(game.roles);
+    assassinId = rolesToPlayers[BAD_ROLES.ASSASSIN];
+    merlinId = rolesToPlayers[GOOD_ROLES.MERLIN];
+
+    testEmitter.once('killMerlinStage', function (msg) {
+        t.equal(msg.gameId, gameId, 'Should have the right game');
+        t.equal(msg.stage, STAGES.KILL_MERLIN, 'We should get to the kill Merlin stage');
+    });
+
+    _.times(3, function () {
+        goOnQuest(testEmitter, game);
+    });
+
+    testEmitter.once('merlinTargeted', function (msg) {
+        t.equal(msg.targetId, merlinId, 'Targeted player should be the player we chose');
+        t.equal(msg.requestingPlayerId, assassinId, 'Requesting player ID should be the ASSASSIN');
+        t.equal(msg.gameId, gameId, 'The gameId should be that of this game');
+    });
+
+    testEmitter.once('killMerlinAttempted', function (msg) {
+        t.equal(msg.gameId, gameId, 'The gameId should be that of this game');
+        t.equal(msg.requestingPlayerId, assassinId, 'The requesting player should be the ASSASSIN');
+        t.equal(msg.stage, STAGES.BAD_WINS, 'Bad should win because the ASSASSIN killed MERLIN');
+        t.end();
+    });
+
+    testEmitter.emit('targetMerlin', {
+        targetId: merlinId,
+        requestingPlayerId: assassinId,
+        gameId: gameId,
+        callback: callback
+    });
+    testEmitter.emit('killMerlin', {
+        requestingPlayerId: assassinId,
+        gameId: gameId,
+        callback: callback
+    });
+});
+
+
+test('test attempt to kill Merlin (good wins)', function (t) {
+    var testEmitter = newEmitter(),
+        gameController = new GameController(testEmitter),
+        gameId = 'game0',
+        ownerId = 'player0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED', 'ASSASSIN'],
+        rolesToPlayers, assassinId, merlinId, game;
+
+    initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles);
+
+    game = gameController.games[gameId];
+    rolesToPlayers = _.invert(game.roles);
+    assassinId = rolesToPlayers[BAD_ROLES.ASSASSIN];
+    merlinId = rolesToPlayers[GOOD_ROLES.PERCIVAL];
+
+    testEmitter.once('killMerlinStage', function (msg) {
+        t.equal(msg.gameId, gameId, 'Should have the right game');
+        t.equal(msg.stage, STAGES.KILL_MERLIN, 'We should get to the kill Merlin stage');
+    });
+
+    _.times(3, function () {
+        goOnQuest(testEmitter, game);
+    });
+
+    testEmitter.once('merlinTargeted', function (msg) {
+        t.equal(msg.targetId, merlinId, 'Targeted player should be the player we chose');
+        t.equal(msg.requestingPlayerId, assassinId, 'Requesting player ID should be the ASSASSIN');
+        t.equal(msg.gameId, gameId, 'The gameId should be that of this game');
+    });
+
+    testEmitter.once('killMerlinAttempted', function (msg) {
+        t.equal(msg.gameId, gameId, 'The gameId should be that of this game');
+        t.equal(msg.requestingPlayerId, assassinId, 'The requesting player should be the ASSASSIN');
+        t.equal(msg.stage, STAGES.GOOD_WINS, 'Good should win because the ASSASSIN did not kill MERLIN');
+        t.end();
+    });
+
+    testEmitter.emit('targetMerlin', {
+        targetId: merlinId,
+        requestingPlayerId: assassinId,
+        gameId: gameId,
+        callback: callback
+    });
+    testEmitter.emit('killMerlin', {
+        requestingPlayerId: assassinId,
+        gameId: gameId,
+        callback: callback
+    });
+});
+
 function initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles) {
     gameController.init();
 
@@ -614,6 +720,43 @@ function initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles
     });
 
     testEmitter.emit('startGame', {gameId: gameId, playerId: ownerId});
+}
+
+function goOnQuest(testEmitter, game) {
+    var currentKing,
+        numQuesters = game.currentQuest().numPlayers,
+        players = Object.keys(game.players);
+
+    currentKing = game.currentKing();
+    _.times(numQuesters, function (i) {
+        testEmitter.emit('selectQuester', {
+            playerId: players[i],
+            requestingPlayerId: currentKing,
+            gameId: game.id
+        });
+    });
+
+    testEmitter.emit('submitQuesters', {
+        requestingPlayerId: currentKing,
+        gameId: game.id
+    });
+
+    _.each(game.players, function (player, playerId) {
+        testEmitter.emit('voteAcceptReject', {
+            playerId: playerId,
+            vote: VOTE.ACCEPT,
+            gameId: game.id
+        });
+    });
+
+    _.times(numQuesters, function (i) {
+        testEmitter.emit('voteSuccessFail', {
+            playerId: players[i],
+            gameId: game.id,
+            vote: VOTE.SUCCESS,
+            callback: callback
+        });
+    });
 }
 
 function callback(error, msg) {

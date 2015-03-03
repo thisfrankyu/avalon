@@ -308,10 +308,10 @@ Game.prototype.voteSuccessFail = function (votingPlayerId, vote) {
         voteResult = this._resolveSuccessFailVote();
     }
     return {
-      stage: this.stage,
-      votes: successFailVotes,
-      voteResult: voteResult,
-      questIndex: questIndex
+        stage: this.stage,
+        votes: successFailVotes,
+        voteResult: voteResult,
+        questIndex: questIndex
     };
 };
 
@@ -365,6 +365,12 @@ Game.prototype._validatePlayerIsBad = function (playerId) {
     }
 };
 
+Game.prototype._validatePlayerIsGood = function (playerId) {
+    if (this.getAlignment(playerId) !== ALIGNMENT.GOOD) {
+        throw new Error(playerId + ' is not good');
+    }
+};
+
 Game.prototype._validateKillMerlin = function (targetId, requestingPlayerId) {
     if (this.stage !== STAGES.KILL_MERLIN) {
         throw new Error('tried to target merlin before we got to the kill merlin stage');
@@ -372,6 +378,7 @@ Game.prototype._validateKillMerlin = function (targetId, requestingPlayerId) {
     this._validatePlayerInGame(requestingPlayerId);
     this._validatePlayerInGame(targetId);
     this._validatePlayerIsBad(requestingPlayerId);
+    this._validatePlayerIsGood(targetId);
     if (_.values(this.roles).indexOf(BAD_ROLES.ASSASSIN) !== -1 && this.roles[requestingPlayerId] !== BAD_ROLES.ASSASSIN) {
         throw new Error('only the assassin can target a possible merlin if there is an assassin in game, requestingPlayerId: ' + requestingPlayerId)
     }

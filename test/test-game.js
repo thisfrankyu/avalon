@@ -548,6 +548,8 @@ test('test good wins on 3-2 ', function (t) {
     t.equal(game.stage, STAGES.KILL_MERLIN, 'game should be in KILL MERLIN after 3 succeeds');
     t.throws(game.targetMerlin.bind(game, rolesToPlayers[RULES.GOOD_ROLES.PERCIVAL], rolesToPlayers[RULES.GOOD_ROLES.MERLIN]),
         /is not bad/, 'make sure a good player cannot target a merlin');
+    t.throws(game.targetMerlin.bind(game, rolesToPlayers[RULES.BAD_ROLES.MORDRED], rolesToPlayers[RULES.BAD_ROLES.ASSASSIN]),
+        /is not good/, 'make sure a bad player cannot target be targeted');
     t.throws(game.targetMerlin.bind(game, rolesToPlayers[RULES.GOOD_ROLES.MERLIN], rolesToPlayers[RULES.BAD_ROLES.MORDRED]),
         /only the assassin can target a possible merlin/, 'make sure if the assassin is in the game, another bad person cannot try to target a merlin');
 
@@ -613,8 +615,6 @@ test('test bad wins on 3-2 kill merlin', function (t) {
     t.equal(game.stage, STAGES.BAD_WINS, 'if bad hits merlin, then bad should win');
     t.end();
 });
-
-
 
 
 function goOnQuestWithNumFails(t, game, numBad) {

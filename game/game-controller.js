@@ -36,7 +36,7 @@ GameController.prototype._validateGame = function (gameId) {
     }
 };
 
-GameController.prototype._registerPlayer = function(playerId, callback){
+GameController.prototype._registerPlayer = function (playerId, callback) {
     if (_.has(this.players, playerId)) {
         throw new Error('playerId ' + playerId + ' has already been registered');
     }
@@ -90,7 +90,7 @@ GameController.prototype._handleJoinGame = function (msg) {
         gameId: game.id,
         ownerId: game.ownerId,
         joinedPlayerId: msg.playerId,
-        players: Object.keys(game.players),
+        players: _.keys(game.players),
         badSpecialRoles: game.badSpecialRoles,
         goodSpecialRoles: game.goodSpecialRoles
     };
@@ -107,15 +107,21 @@ GameController.prototype._startGame = function (gameId, playerId) {
     }
 
     game.start();
+    return game;
 };
 
 GameController.prototype._handleStartGame = function (msg) {
     var playerId = msg.playerId,
         gameId = msg.gameId;
-    if (!this.exec(this._startGame.bind(this, gameId, playerId), msg.callback)) return;
+
+    var game = this.exec(this._startGame.bind(this, gameId, playerId), msg.callback);
+    if (!game) return;
 
     var gameStartedMsg = {
-        gameId: gameId
+        gameId: gameId,
+        players: _.keys(game.players),
+        badSpecialRoles: game.badSpecialRoles,
+        goodSpecialRoles: game.goodSpecialRoles
     };
     if (msg.callback) msg.callback(null, gameStartedMsg);
     this.emitter.emit('gameStarted', gameStartedMsg);
@@ -233,12 +239,19 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
     if (callback) callback(null, votedOnSuccessFailMsg);
     this.emitter.emit('votedOnSuccessFail', votedOnSuccessFailMsg);
     if (result.voteResult !== QUEST_STATE.UNDECIDED) {
+        if (result.stage === STAGES.KILL_MERLIN) {
+            this.emitter.emit('killMerlinStage', {
+                gameId: gameId,
+                stage: result.stage
+            });
+        }
         this.emitter.emit('questEnded', {
             gameId: gameId,
             votes: result.votes,
             questResult: result.voteResult,
             questIndex: result.questIndex,
-            nextQuest: game.currentQuest()
+            nextQuest: game.currentQuest(),
+            stage: result.stage
         });
     }
 };
@@ -250,7 +263,54 @@ GameController.prototype._handleVoteSuccessFail = function (msg) {
         callback = msg.callback;
 
     this.exec(this._voteSuccessFail.bind(this, playerId, vote, gameId, callback), callback);
-}
+};
+
+GameController.prototype._targetMerlin = function (targetId, requestingPlayerId, gameId, callback) {
+    var msg = {},
+        game;
+    this._validateGame(gameId);
+
+    game = this.games[gameId];
+    game.targetMerlin(targetId, requestingPlayerId);
+
+    msg.targetId = targetId;
+    msg.requestingPlayerId = requestingPlayerId;
+    msg.gameId = gameId;
+    if (callback) callback(null, msg);
+    this.emitter.emit('merlinTargeted', msg);
+};
+
+GameController.prototype._handleTargetMerlin = function (msg) {
+    var targetId = msg.targetId,
+        requestingPlayerId = msg.requestingPlayerId,
+        gameId = msg.gameId,
+        callback = msg.callback;
+
+    this.exec(this._targetMerlin.bind(this, targetId, requestingPlayerId, gameId, callback), callback);
+};
+
+GameController.prototype._attemptKillMerlin = function (requestingPlayerId, gameId, callback) {
+    var msg = {},
+        game;
+    this._validateGame(gameId);
+
+    game = this.games[gameId];
+    game.killTargetMerlin(requestingPlayerId);
+
+    msg.requestingPlayerId = requestingPlayerId;
+    msg.gameId = gameId;
+    msg.stage = game.stage;
+    if (callback) callback(null, msg);
+    this.emitter.emit('killMerlinAttempted', msg);
+};
+
+GameController.prototype._handleAttemptKillMerlin = function (msg) {
+    var requestingPlayerId = msg.requestingPlayerId,
+        gameId = msg.gameId,
+        callback = msg.callback;
+
+    this.exec(this._attemptKillMerlin.bind(this, requestingPlayerId, gameId, callback), callback);
+};
 
 GameController.prototype.init = function () {
     var self = this;
@@ -263,7 +323,8 @@ GameController.prototype.init = function () {
     this.emitter.on('submitQuesters', self._handleSubmitQuestersForVoting.bind(self));
     this.emitter.on('voteAcceptReject', self._handleVoteAcceptReject.bind(self));
     this.emitter.on('voteSuccessFail', self._handleVoteSuccessFail.bind(self));
-
+    this.emitter.on('targetMerlin', self._handleTargetMerlin.bind(self));
+    this.emitter.on('killMerlin', self._handleAttemptKillMerlin.bind(self));
 };
 
 exports.app = app;
