@@ -22,8 +22,30 @@ test('test registerPlayer', function (t) {
             'After registerPlayer is emitted, there should be a player in the gameController');
 
     });
-    testEmitter.emit('registerPlayer', {playerId: 'player0'});
+    testEmitter.emit('registerPlayer', {playerId: 'player0', callback: callback});
     testEmitter.emit('registerPlayer', {playerId: 'player1'});
+});
+
+test('test register already registered player', function (t) {
+    var testEmitter = newEmitter(),
+        gameController = new GameController(testEmitter),
+        gameId = 'game0',
+        playerId = 'player0',
+        badSpecialRoles = [];
+    gameController.init();
+    t.plan(2);
+    testEmitter.once('error', function (error) {
+        t.equal(error.message, 'playerId player0 has already been registered',
+            'make sure an error was emitted');
+    });
+    testEmitter.emit('registerPlayer', {playerId: 'player0'});
+    testEmitter.emit('registerPlayer', {
+        playerId: 'player0',
+        callback: function (error, msg) {
+            t.equal(error.message, 'playerId player0 has already been registered',
+                'make sure the error was returned to caller');
+        }
+    });
 });
 
 test('test createGame', function (t) {
@@ -58,7 +80,8 @@ test('test createGame', function (t) {
         gameOptions: {
             goodSpecialRoles: goodSpecialRoles,
             badSpecialRoles: badSpecialRoles
-        }
+        },
+        callback: callback
     });
     testEmitter.emit('createGame', {
         gameId: gameId,
@@ -97,7 +120,10 @@ test('test joinGame', function (t) {
         gameId: gameId,
         playerId: ownerId
     });
-    testEmitter.emit('joinGame', {gameId: gameId, playerId: player1});
+    testEmitter.emit('joinGame', {
+        gameId: gameId, playerId: player1,
+        callback: callback
+    });
 
 });
 
@@ -164,7 +190,10 @@ test('test startGame', function (t) {
 
     testEmitter.emit('startGame', {gameId: gameId, playerId: 'playerX'});
 
-    testEmitter.emit('startGame', {gameId: gameId, playerId: ownerId});
+    testEmitter.emit('startGame', {
+        gameId: gameId, playerId: ownerId,
+        callback: callback
+    });
 });
 
 test('test select/remove quester', function (t) {
@@ -220,7 +249,8 @@ test('test select/remove quester', function (t) {
     testEmitter.emit('selectQuester', {
         playerId: ownerId,
         requestingPlayerId: currentKing,
-        gameId: gameId
+        gameId: gameId,
+        callback: callback
     });
 
     testEmitter.emit('selectQuester', {
@@ -232,7 +262,8 @@ test('test select/remove quester', function (t) {
     testEmitter.emit('removeQuester', {
         playerId: ownerId,
         requestingPlayerId: currentKing,
-        gameId: gameId
+        gameId: gameId,
+        callback: callback
     });
 
     testEmitter.emit('removeQuester', {
@@ -284,7 +315,8 @@ test('test submit questers for voting', function (t) {
 
     testEmitter.emit('submitQuesters', {
         requestingPlayerId: currentKing,
-        gameId: gameId
+        gameId: gameId,
+        callback: callback
     });
 
     t.end();
@@ -346,7 +378,8 @@ test('test vote on questers accepted', function (t) {
         testEmitter.emit('voteAcceptReject', {
             playerId: playerId,
             vote: VOTE.ACCEPT,
-            gameId: gameId
+            gameId: gameId,
+            callback: callback
         });
     });
 });
@@ -533,7 +566,7 @@ test('test vote on success/fail succeeded', function (t) {
         });
     });
 
-    testEmitter.on('votedOnSuccessFail', function(msg) {
+    testEmitter.on('votedOnSuccessFail', function (msg) {
         t.equal(msg.gameId, gameId, 'The game returned should match the one we created.');
         t.equal(msg.vote, VOTE.SUCCESS, 'The votes should both be SUCCESS.');
         playerIds.push(msg.playerId);
@@ -543,7 +576,7 @@ test('test vote on success/fail succeeded', function (t) {
         }
     });
 
-    testEmitter.once('questEnded', function(msg) {
+    testEmitter.once('questEnded', function (msg) {
         t.equal(msg.gameId, gameId, 'The game returned should match the one we created.');
         t.deepEqual(msg.votes, {player0: VOTE.SUCCESS, player1: VOTE.SUCCESS}, 'We should see all the success votes');
         t.equal(msg.questResult, QUEST_STATE.SUCCEEDED, 'After 2 SUCCESS votes, the quest should have succeeded');
@@ -553,7 +586,12 @@ test('test vote on success/fail succeeded', function (t) {
     });
 
     testEmitter.emit('voteSuccessFail', {playerId: selectedQuesters[0], gameId: gameId, vote: VOTE.SUCCESS});
-    testEmitter.emit('voteSuccessFail', {playerId: selectedQuesters[1], gameId: gameId, vote: VOTE.SUCCESS});
+    testEmitter.emit('voteSuccessFail', {
+        playerId: selectedQuesters[1],
+        gameId: gameId,
+        vote: VOTE.SUCCESS,
+        callback: callback
+    });
 });
 
 function initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles) {
@@ -576,4 +614,7 @@ function initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles
     });
 
     testEmitter.emit('startGame', {gameId: gameId, playerId: ownerId});
+}
+
+function callback(error, msg) {
 }

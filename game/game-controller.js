@@ -20,10 +20,11 @@ function GameController(emitter) {
     this.games = {};
 }
 
-GameController.prototype.exec = function (apiCall) {
+GameController.prototype.exec = function (apiCall, callback) {
     try {
         return apiCall() || true;
     } catch (e) {
+        if (callback) callback(e);
         this.emitter.emit('error', e);
         return false;
     }
@@ -35,15 +36,24 @@ GameController.prototype._validateGame = function (gameId) {
     }
 };
 
-GameController.prototype._handleRegisterPlayer = function (msg) {
-    var playerId = msg.playerId;
+GameController.prototype._registerPlayer = function(playerId, callback){
+    if (_.has(this.players, playerId)) {
+        throw new Error('playerId ' + playerId + ' has already been registered');
+    }
     this.players[playerId] = new Player(playerId);
+    if (callback) callback(null, {playerId: playerId});
+}
+
+GameController.prototype._handleRegisterPlayer = function (msg) {
+    var playerId = msg.playerId,
+        callback = msg.callback;
+    if (!this.exec(this._registerPlayer.bind(this, playerId, callback), callback)) return;
     this.emitter.emit('playerRegistered', {playerId: playerId});
 };
 
 GameController.prototype._createGame = function (gameId, playerId, options) {
     if (_.has(this.games, gameId)) {
-        throw new Error(gameId + ' has already been created');
+        throw  new Error(gameId + ' has already been created');
     }
     var game = new Game(gameId, playerId, options);
     this.games[gameId] = game;
@@ -53,15 +63,17 @@ GameController.prototype._createGame = function (gameId, playerId, options) {
 
 
 GameController.prototype._handleCreateGame = function (msg) {
-    var game = this.exec(this._createGame.bind(this, msg.gameId, msg.playerId, msg.gameOptions));
+    var game = this.exec(this._createGame.bind(this, msg.gameId, msg.playerId, msg.gameOptions), msg.callback);
     if (!game) return;
-    this.emitter.emit('gameCreated', {
+    var gameCreatedMsg = {
         gameId: game.id,
         ownerId: game.ownerId,
         badSpecialRoles: game.badSpecialRoles,
         goodSpecialRoles: game.goodSpecialRoles,
         gameFromController: this.games[game.id]
-    });
+    };
+    if (msg.callback) msg.callback(null, gameCreatedMsg);
+    this.emitter.emit('gameCreated', gameCreatedMsg);
 };
 
 GameController.prototype._joinGame = function (gameId, playerId) {
@@ -72,16 +84,18 @@ GameController.prototype._joinGame = function (gameId, playerId) {
 };
 
 GameController.prototype._handleJoinGame = function (msg) {
-    var game = this.exec(this._joinGame.bind(this, msg.gameId, msg.playerId));
+    var game = this.exec(this._joinGame.bind(this, msg.gameId, msg.playerId), msg.callback);
     if (!game) return;
-    this.emitter.emit('gameJoined', {
+    var gameJoinedMsg = {
         gameId: game.id,
         ownerId: game.ownerId,
         joinedPlayerId: msg.playerId,
         players: Object.keys(game.players),
         badSpecialRoles: game.badSpecialRoles,
         goodSpecialRoles: game.goodSpecialRoles
-    });
+    };
+    if (msg.callback) msg.callback(null, gameJoinedMsg);
+    this.emitter.emit('gameJoined', gameJoinedMsg);
 };
 
 GameController.prototype._startGame = function (gameId, playerId) {
@@ -98,11 +112,13 @@ GameController.prototype._startGame = function (gameId, playerId) {
 GameController.prototype._handleStartGame = function (msg) {
     var playerId = msg.playerId,
         gameId = msg.gameId;
-    if (!this.exec(this._startGame.bind(this, gameId, playerId))) return;
+    if (!this.exec(this._startGame.bind(this, gameId, playerId), msg.callback)) return;
 
-    this.emitter.emit('gameStarted', {
+    var gameStartedMsg = {
         gameId: gameId
-    });
+    };
+    if (msg.callback) msg.callback(null, gameStartedMsg);
+    this.emitter.emit('gameStarted', gameStartedMsg);
 };
 
 GameController.prototype._selectQuester = function (playerId, requestingPlayerId, gameId) {
@@ -115,14 +131,14 @@ GameController.prototype._handleSelectQuester = function (msg) {
     var playerId = msg.playerId,
         requestingPlayerId = msg.requestingPlayerId,
         gameId = msg.gameId;
-    if (!this.exec(this._selectQuester.bind(this, playerId, requestingPlayerId, gameId))) return;
-
-
-    this.emitter.emit('questerSelected', {
+    if (!this.exec(this._selectQuester.bind(this, playerId, requestingPlayerId, gameId), msg.callback)) return;
+    var questerSelectedMsg = {
         gameId: gameId,
         selectedQuesterId: playerId,
         requestingPlayerId: requestingPlayerId
-    });
+    };
+    if (msg.callback) msg.callback(null, questerSelectedMsg);
+    this.emitter.emit('questerSelected', questerSelectedMsg);
 };
 
 GameController.prototype._removeQuester = function (playerId, requestingPlayerId, gameId) {
@@ -135,42 +151,49 @@ GameController.prototype._handleRemoveQuester = function (msg) {
     var playerId = msg.playerId,
         requestingPlayerId = msg.requestingPlayerId,
         gameId = msg.gameId;
-    if (!this.exec(this._removeQuester.bind(this, playerId, requestingPlayerId, gameId))) return;
+    if (!this.exec(this._removeQuester.bind(this, playerId, requestingPlayerId, gameId), msg.callback)) return;
 
-    this.emitter.emit('questerRemoved', {
+    var questerRemovedMsg = {
         gameId: gameId,
         removedQuesterId: playerId,
         requestingPlayerId: requestingPlayerId
-    });
+    };
+    if (msg.callback) msg.callback(null, questerRemovedMsg);
+    this.emitter.emit('questerRemoved', questerRemovedMsg);
 };
 
-GameController.prototype._submitQuestersForVoting = function (playerId, gameId) {
+GameController.prototype._submitQuestersForVoting = function (playerId, gameId, callback) {
     var game = this.games[gameId];
     this._validateGame(gameId);
     game.submitQuestersForVoting(playerId);
-    this.emitter.emit('questersSubmitted', {
+    var questersSubmittedMsg = {
         gameId: gameId,
         selectedQuesters: game.currentQuest().selectedQuesters
-    });
+    };
+    if (callback) callback(questersSubmittedMsg);
+    this.emitter.emit('questersSubmitted', questersSubmittedMsg);
 };
 
 GameController.prototype._handleSubmitQuestersForVoting = function (msg) {
     var gameId = msg.gameId,
-        requestingPlayerId = msg.requestingPlayerId;
-    this.exec(this._submitQuestersForVoting.bind(this, requestingPlayerId, gameId));
+        requestingPlayerId = msg.requestingPlayerId,
+        callback = msg.callback;
+    this.exec(this._submitQuestersForVoting.bind(this, requestingPlayerId, gameId, callback), callback);
 };
 
-GameController.prototype._voteAcceptReject = function (playerId, vote, gameId) {
+GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, callback) {
     var game = this.games[gameId],
         result;
     this._validateGame(gameId);
     result = game.voteAcceptReject(playerId, vote);
 
-    this.emitter.emit('votedOnQuesters', {
+    var votedOnQuestersMsg = {
         gameId: gameId,
         playerId: playerId,
         vote: vote
-    });
+    };
+    this.emitter.emit('votedOnQuesters', votedOnQuestersMsg);
+    if (callback) callback(null, votedOnQuestersMsg);
 
     if (result.stage === STAGES.QUEST) {
         this.emitter.emit('questAccepted', {
@@ -192,20 +215,23 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId) {
 GameController.prototype._handleVoteAcceptReject = function (msg) {
     var playerId = msg.playerId,
         vote = msg.vote,
-        gameId = msg.gameId;
-    this.exec(this._voteAcceptReject.bind(this, playerId, vote, gameId));
+        gameId = msg.gameId,
+        callback = msg.callback;
+    this.exec(this._voteAcceptReject.bind(this, playerId, vote, gameId, callback), callback);
 };
 
-GameController.prototype._voteSuccessFail = function (playerId, vote, gameId) {
+GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, callback) {
     var game = this.games[gameId],
         result;
     this._validateGame(gameId);
     result = game.voteSuccessFail(playerId, vote);
-    this.emitter.emit('votedOnSuccessFail', {
+    var votedOnSuccessFailMsg = {
         gameId: gameId,
         playerId: playerId,
         vote: vote
-    });
+    };
+    if (callback) callback(null, votedOnSuccessFailMsg);
+    this.emitter.emit('votedOnSuccessFail', votedOnSuccessFailMsg);
     if (result.voteResult !== QUEST_STATE.UNDECIDED) {
         this.emitter.emit('questEnded', {
             gameId: gameId,
@@ -220,9 +246,10 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId) {
 GameController.prototype._handleVoteSuccessFail = function (msg) {
     var playerId = msg.playerId,
         vote = msg.vote,
-        gameId = msg.gameId;
+        gameId = msg.gameId,
+        callback = msg.callback;
 
-    this.exec(this._voteSuccessFail.bind(this, playerId, vote, gameId));
+    this.exec(this._voteSuccessFail.bind(this, playerId, vote, gameId, callback), callback);
 }
 
 GameController.prototype.init = function () {
