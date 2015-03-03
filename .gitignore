@@ -11,6 +11,7 @@ node_modules
 .floo
 .idea/dictionaries/
 .idea/workspace.xml
+.idea/codeStyleSettings.xml
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source
