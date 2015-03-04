@@ -142,7 +142,7 @@ SessionController.prototype._selectQuester = function (sessionSocketId, playerId
             session.socket.emit('selectQuesterSucceeded', {
                 gameId: msg.gameId,
                 requestingPlayerId: msg.requestingPlayerId,
-                playerId: msg.playerId,
+                selectedQuesterId: msg.playerId,
                 sessionId: sessionSocketId
             });
         }
@@ -165,7 +165,7 @@ SessionController.prototype._removeQuester = function (sessionSocketId, playerId
                 session.socket.emit('removeQuesterFailed', error);
                 return;
             }
-            session.socket.emit('questerRemoved', {
+            session.socket.emit('removeQuesterSucceeded', {
                 gameId: msg.gameId,
                 removedQuesterId: msg.playerId,
                 requestingPlayerId: msg.requestingPlayerId,

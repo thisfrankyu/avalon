@@ -265,6 +265,7 @@ test('test start game', function (t) {
             badSpecialRoles: badSpecialRoles
         }
     });
+    errorOnce('startGame', testEmitter, socket, t, {gameId: gameId});
     _.times(6, function (n) {
         var i = n + 1;
         sockets.push(new Socket('sessionSocket' + i));
@@ -272,6 +273,8 @@ test('test start game', function (t) {
         sockets[i].emit('registerPlayer', {playerId: 'player' + i});
         sockets[i].emit('joinGame', {gameId: gameId, playerId: 'player' + i});
     });
+
+
     testEmitter.on('startGame', function (msg) {
         msg.callback(null, {
             gameId: gameId,
@@ -314,18 +317,48 @@ test('test select and remove questers', function (t) {
         t.equal(error.message, 'error on selectQuester',
             'make sure error on selectQuester gets emitted');
     });
-    errorOnce('selectQuester', testEmitter, socket, t, gameId);
-
+    errorOnce('selectQuester', testEmitter, socket, t, {gameId: gameId, playerId: playerId});
+    errorOnce('removeQuester', testEmitter, socket, t, {gameId: gameId, playerId: 'playerX'});
     testEmitter.on('selectQuester', function (msg) {
         var response = {
             gameId: msg.gameId,
             selectedQuesterId: msg.playerId,
-            requestingPlayerId: msg.requestingPlayerId
-        }
+            requestingPlayerId: msg.requestingPlayerId,
+            playerId: playerId
+        };
         msg.callback(null, response);
         testEmitter.emit('questerSelected', response);
     });
-    t.end();
+    socket.once('selectQuesterSucceeded', function (msg) {
+        t.deepEqual(msg, {
+            gameId: gameId,
+            selectedQuesterId: playerId,
+            requestingPlayerId: playerId,
+            sessionId: sessionId
+        }, 'make sure the correct quester is selected');
+    });
+    socket.emit('selectQuester', {gameId: gameId, playerId: playerId});
+    testEmitter.on('removeQuester', function (msg) {
+        var response = {
+            gameId: msg.gameId,
+            removedQuesterId: msg.playerId,
+            requestingPlayerId: msg.requestingPlayerId,
+            playerId: playerId
+        };
+        msg.callback(null, response);
+        testEmitter.emit('questerSelected', response);
+    });
+    socket.once('removeQuesterSucceeded', function (msg) {
+        t.deepEqual(msg, {
+            gameId: gameId,
+            removedQuesterId: playerId,
+            requestingPlayerId: playerId,
+            sessionId: sessionId
+        }, 'make sure the correct quester is removed');
+        t.end();
+    });
+    socket.emit('removeQuester', {gameId: gameId, playerId: playerId});
+
 });
 
 function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets) {
@@ -388,7 +421,7 @@ function initGame(sessionController, io, socket, testEmitter, players, ownerId, 
     socket.emit('startGame', {gameId: gameId});
 }
 
-function errorOnce(eventName, testEmitter, socket, t, gameId) {
+function errorOnce(eventName, testEmitter, socket, t, msg) {
     testEmitter.once('error', function (error) {
         t.equal(error.message, 'error on ' + eventName,
             'make sure error on ' + eventName + ' gets emitted');
@@ -402,5 +435,5 @@ function errorOnce(eventName, testEmitter, socket, t, gameId) {
         msg.callback(error);
         testEmitter.emit('error', error);
     });
-    socket.emit(eventName, {gameId: gameId});
+    socket.emit(eventName, msg);
 }
