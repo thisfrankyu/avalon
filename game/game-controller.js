@@ -53,7 +53,7 @@ GameController.prototype._handleRegisterPlayer = function (msg) {
 
 GameController.prototype._createGame = function (gameId, playerId, options) {
     if (_.has(this.games, gameId)) {
-        throw  new Error(gameId + ' has already been created');
+        throw new Error(gameId + ' has already been created');
     }
     var game = new Game(gameId, playerId, options);
     this.games[gameId] = game;
@@ -168,7 +168,7 @@ GameController.prototype._handleRemoveQuester = function (msg) {
     this.emitter.emit('questerRemoved', questerRemovedMsg);
 };
 
-GameController.prototype._submitQuestersForVoting = function (playerId, gameId, callback) {
+GameController.prototype._submitQuesters = function (playerId, gameId, callback) {
     var game = this.games[gameId];
     this._validateGame(gameId);
     game.submitQuestersForVoting(playerId);
@@ -180,11 +180,11 @@ GameController.prototype._submitQuestersForVoting = function (playerId, gameId, 
     this.emitter.emit('questersSubmitted', questersSubmittedMsg);
 };
 
-GameController.prototype._handleSubmitQuestersForVoting = function (msg) {
+GameController.prototype._handleSubmitQuesters = function (msg) {
     var gameId = msg.gameId,
         requestingPlayerId = msg.requestingPlayerId,
         callback = msg.callback;
-    this.exec(this._submitQuestersForVoting.bind(this, requestingPlayerId, gameId, callback), callback);
+    this.exec(this._submitQuesters.bind(this, requestingPlayerId, gameId, callback), callback);
 };
 
 GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, callback) {
@@ -320,7 +320,7 @@ GameController.prototype.init = function () {
     this.emitter.on('startGame', self._handleStartGame.bind(self));
     this.emitter.on('selectQuester', self._handleSelectQuester.bind(self));
     this.emitter.on('removeQuester', self._handleRemoveQuester.bind(self));
-    this.emitter.on('submitQuesters', self._handleSubmitQuestersForVoting.bind(self));
+    this.emitter.on('submitQuesters', self._handleSubmitQuesters.bind(self));
     this.emitter.on('voteAcceptReject', self._handleVoteAcceptReject.bind(self));
     this.emitter.on('voteSuccessFail', self._handleVoteSuccessFail.bind(self));
     this.emitter.on('targetMerlin', self._handleTargetMerlin.bind(self));
