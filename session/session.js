@@ -31,7 +31,7 @@ SessionController.prototype._registerPlayer = function (sessionSocketId, playerI
         playerId: playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('registerPlayerFailed', error);
+                session.socket.emit('registerPlayerFailed', error.message);
                 return;
             }
             session.playerId = playerId;
