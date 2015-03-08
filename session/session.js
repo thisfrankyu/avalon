@@ -27,6 +27,12 @@ SessionController.prototype._validateRegistered = function (sessionSocketId) {
 
 SessionController.prototype._registerPlayer = function (sessionSocketId, playerId) {
     var session = this.sessions[sessionSocketId];
+    if (session.playerId !== null) {
+        var error = new Error('session already has a playerId ' + session.playerId);
+
+        session.socket.emit('registerPlayerFailed', error);
+        throw error;
+    }
     this.emitter.emit('registerPlayer', {
         playerId: playerId,
         callback: function (error, msg) {
@@ -336,11 +342,21 @@ SessionController.prototype._registerSession = function (sessionSocket) {
     sessionSocket.on('voteSuccessFail', this._handleVoteSuccessFail.bind(this, sessionSocketId));
     sessionSocket.on('targetMerlin', this._handleTargetMerlin.bind(this, sessionSocketId));
     sessionSocket.on('killMerlin', this._handleAttemptKillMerlin.bind(this, sessionSocketId));
+
+
 };
+
+
 
 SessionController.prototype.init = function () {
     var self = this;
     this.io.on('connection', this._registerSession.bind(this));
+    this.emitter.on('playerRegistered', function(msg){self.io.emit('playerRegistered', msg)});
+    this.emitter.on('gameCreated', function(msg){self.io.emit('gameCreated', msg)});
+    this.emitter.on('gameJoined', function(msg){self.io.emit('gameJoined', msg)});
+    this.emitter.on('gameStarted', function(msg){self.io.emit('gameStarted', msg)});
+    this.emitter.on('questerSelected', function(msg){self.io.emit('questerSelected', msg)});
+
 };
 
 exports.SessionController = SessionController;

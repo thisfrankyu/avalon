@@ -55,6 +55,10 @@ test('test register player', function (t) {
         var error = new Error('playerId ' + playerId + ' has already been registered');
         msg.callback(error);
     });
+    testEmitter.once('error', function (error) {
+        t.equal(error.message, 'session already has a playerId player0',
+            'make sure error was thrown for already registered player');
+    });
     socket.emit('registerPlayer', {playerId: playerId});
 });
 
@@ -127,6 +131,7 @@ test('test create game', function (t) {
 
 test('test join game', function (t) {
     var sessionId = 'sessionSocket0',
+        sessionId1 = 'sessionSocket1',
         playerId = 'player0',
         ownerId = playerId,
         player1 = 'player1',
@@ -136,11 +141,13 @@ test('test join game', function (t) {
         testEmitter = newEmitter(),
         io = new Socket('io'),
         socket = new Socket(sessionId),
+        socket1 = new Socket(sessionId1),
         sessionController = new SessionController(testEmitter, io),
         players = [];
 
     sessionController.init();
     io.emit('connection', socket);
+    io.emit('connection', socket1);
     testEmitter.on('registerPlayer', function (msg) {
         var response = {playerId: msg.playerId};
         msg.callback(null, response);
@@ -186,14 +193,14 @@ test('test join game', function (t) {
 
 
     socket.emit('registerPlayer', {playerId: playerId});
-    socket.emit('registerPlayer', {playerId: player1});
+    socket1.emit('registerPlayer', {playerId: player1});
     socket.emit('createGame', {
         gameId: gameId, gameOptions: {
             goodSpecialRoles: goodSpecialRoles,
             badSpecialRoles: badSpecialRoles
         }
     });
-    socket.emit('joinGame', {gameId: gameId, playerId: player1});
+    socket1.emit('joinGame', {gameId: gameId, playerId: player1});
     testEmitter.once('joinGame', function (msg) {
         var error = new Error('random error from join game');
         testEmitter.emit('error', error);
@@ -202,11 +209,11 @@ test('test join game', function (t) {
     testEmitter.once('error', function (error) {
         t.equal(error.message, 'random error from join game', 'make sure that failing on join game gets back to client');
     });
-    socket.once('joinGameFailed', function (error) {
+    socket1.once('joinGameFailed', function (error) {
         t.equal(error.message, 'random error from join game', 'make sure that failing on join game gets back to client');
         t.end();
     });
-    socket.emit('joinGame', {gameId: gameId, playerId: player1});
+    socket1.emit('joinGame', {gameId: gameId, playerId: player1});
 });
 
 
