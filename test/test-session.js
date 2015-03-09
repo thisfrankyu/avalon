@@ -5,6 +5,7 @@ var SessionController = require('../session/session').SessionController;
 var EventEmitter = require('events').EventEmitter;
 var newEmitter = require('../communication/emitter').newEmitter;
 var VOTE = require('../game/quest').VOTE;
+var QUEST_STATE = require('../game/quest').QUEST_STATE;
 
 function Socket(id) {
     this.id = id;
@@ -33,17 +34,20 @@ test('test register player', function (t) {
         testEmitter = newEmitter(),
         io = new Socket('io'),
         socket = new Socket(sessionId),
+        socket1 = new Socket('sessionSocket1'),
         sessionController = new SessionController(testEmitter, io),
         session;
 
+    t.plan(6);
     sessionController.init();
     io.emit('connection', socket);
+    io.emit('connection', socket1);
+    errorOnce('registerPlayer', testEmitter, socket, t, {playerId: 'playerX'});
     socket.on('registerPlayerSucceeded', function (msg) {
         if (_.has(msg, 'sessionId')) {
             session = sessionController.sessions[sessionId];
             t.equal(session.playerId, playerId,
                 'make sure that ' + playerId + ' was successfully registered in session controller');
-            t.end();
         }
     });
     testEmitter.once('registerPlayer', function (msg) {
@@ -60,7 +64,15 @@ test('test register player', function (t) {
         t.equal(error.message, 'session already has a playerId player0',
             'make sure error was thrown for already registered player');
     });
+    socket1.once('registerPlayerFailed', function (msg) {
+        t.ok(msg, 'We should not be able to register with an ID that is already being used');
+    });
+    testEmitter.once('error', function (error) {
+        t.equal(error.message, 'session already has a playerId player0',
+            'make sure error was thrown for already registered player');
+    });
     socket.emit('registerPlayer', {playerId: playerId});
+    socket1.emit('registerPlayer', {playerId: playerId});
 });
 
 
@@ -403,7 +415,7 @@ test('test voteAcceptReject', function (t) {
         selectedQuesters = [],
         votes = {};
 
-    t.plan(16);
+    t.plan(18);
     initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
     testEmitter.on('selectQuester', function (msg) {
         var response = {
@@ -416,6 +428,7 @@ test('test voteAcceptReject', function (t) {
         msg.callback(null, response);
         testEmitter.emit('questerSelected', response);
     });
+    errorOnce('voteAcceptReject', testEmitter, socket, t, {gameId: gameId, playerId: playerId, vote: 2});
     testEmitter.once('submitQuesters', function (msg) {
         var response = {
             gameId: gameId,
@@ -482,6 +495,76 @@ test('test voteAcceptReject', function (t) {
         });
         sockets[i].emit('voteAcceptReject', {gameId: gameId, playerId: players[i], vote: VOTE.ACCEPT});
     });
+});
+
+
+test('test voteSuccessFail', function (t) {
+    var sessionId = 'sessionSocket0',
+        playerId = 'player0',
+        ownerId = playerId,
+        player1 = 'player1',
+        gameId = 'game0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED'],
+        testEmitter = newEmitter(),
+        io = new Socket('io'),
+        socket = new Socket(sessionId),
+        sockets = [socket],
+        sessionController = new SessionController(testEmitter, io),
+        players = [],
+        selectedQuesters = [playerId, player1],
+        votes = {};
+
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    errorOnce('voteSuccessFail', testEmitter, socket, t, {gameId: gameId, playerId: playerId, vote: 2});
+    testEmitter.on('voteSuccessFail', function (msg) {
+        var response = {gameId: gameId, playerId: msg.playerId, vote: msg.vote};
+
+        votes[msg.playerId] = msg.vote;
+        msg.callback(null, response);
+        testEmitter.emit('votedOnSuccessFail', response);
+        if (_.keys(votes).length >= selectedQuesters.length) {
+            var numFails = _.reduce(votes, function (memo, num) {
+                return memo + (num === VOTE.FAIL ? 1 : 0);
+            }, 0);
+            var questResult = numFails < 1 ? QUEST_STATE.SUCCEEDED : QUEST_STATE.FAILED;
+            testEmitter.emit('questEnded', {
+                gameId: gameId,
+                votes: votes,
+                questResult: questResult
+            });
+        }
+    });
+    sockets[0].once('voteSuccessFailSucceeded', function (msg) {
+        t.deepEqual(msg, {gameId: gameId, playerId: playerId, vote: VOTE.SUCCESS, sessionId: 'sessionSocket0'},
+            'Make sure player0 has his vote reported correctly');
+    });
+    sockets[1].once('voteSuccessFailSucceeded', function (msg) {
+        t.deepEqual(msg, {gameId: gameId, playerId: player1, vote: VOTE.SUCCESS, sessionId: 'sessionSocket1'},
+            'Make sure player1 has his vote reported correctly');
+    });
+    testEmitter.once('questEnded', function (msg) {
+        t.deepEqual(msg, {
+            gameId: gameId,
+            votes: {player0: VOTE.SUCCESS, player1: VOTE.SUCCESS},
+            questResult: QUEST_STATE.SUCCEEDED
+        }, 'Make sure the quest result is SUCCESS');
+    });
+    sockets[0].emit('voteSuccessFail', {gameId: gameId, vote: VOTE.SUCCESS});
+    sockets[1].emit('voteSuccessFail', {gameId: gameId, vote: VOTE.SUCCESS});
+    votes = {};
+    testEmitter.once('questEnded', function (msg) {
+        t.deepEqual(msg, {
+            gameId: gameId,
+            votes: {player0: VOTE.FAIL, player1: VOTE.SUCCESS},
+            questResult: QUEST_STATE.FAILED
+        }, 'Make sure the quest result is FAILED');
+        t.end();
+    });
+
+    sockets[0].emit('voteSuccessFail', {gameId: gameId, vote: VOTE.FAIL});
+    sockets[1].emit('voteSuccessFail', {gameId: gameId, vote: VOTE.SUCCESS});
+
 });
 
 function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets) {

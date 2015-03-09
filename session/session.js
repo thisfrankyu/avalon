@@ -268,7 +268,7 @@ SessionController.prototype._voteSuccessFail = function (sessionSocketId, vote, 
 };
 
 SessionController.prototype._handleVoteSuccessFail = function (sessionSocketId, msg) {
-    this.exec(this._voteAcceptReject.bind(this, sessionSocketId, msg.vote, msg.gameId));
+    this.exec(this._voteSuccessFail.bind(this, sessionSocketId, msg.vote, msg.gameId));
 };
 
 SessionController.prototype._targetMerlin = function (sessionSocketId, targetId, gameId) {
