@@ -4,6 +4,7 @@ var util = require('util');
 var SessionController = require('../session/session').SessionController;
 var EventEmitter = require('events').EventEmitter;
 var newEmitter = require('../communication/emitter').newEmitter;
+var VOTE = require('../game/quest').VOTE;
 
 function Socket(id) {
     this.id = id;
@@ -179,7 +180,7 @@ test('test join game', function (t) {
         testEmitter.emit('gameJoined', response);
     });
 
-    socket.once('joinGameSucceeded', function (msg) {
+    socket1.once('joinGameSucceeded', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             ownerId: ownerId,
@@ -187,10 +188,9 @@ test('test join game', function (t) {
             players: [playerId, player1],
             badSpecialRoles: badSpecialRoles,
             goodSpecialRoles: goodSpecialRoles,
-            sessionId: sessionId
+            sessionId: sessionId1
         }, 'make sure ' + player1 + ' joins the game correctly');
     });
-
 
     socket.emit('registerPlayer', {playerId: playerId});
     socket1.emit('registerPlayer', {playerId: player1});
@@ -326,6 +326,7 @@ test('test select and remove questers', function (t) {
     });
     errorOnce('selectQuester', testEmitter, socket, t, {gameId: gameId, playerId: playerId});
     errorOnce('removeQuester', testEmitter, socket, t, {gameId: gameId, playerId: 'playerX'});
+    errorOnce('submitQuesters', testEmitter, socket, t, {gameId: gameId});
     testEmitter.on('selectQuester', function (msg) {
         var response = {
             gameId: msg.gameId,
@@ -335,6 +336,14 @@ test('test select and remove questers', function (t) {
         };
         msg.callback(null, response);
         testEmitter.emit('questerSelected', response);
+    });
+    testEmitter.once('submitQuesters', function (msg) {
+        var response = {
+            gameId: gameId,
+            selectedQuesters: [playerId, player1]
+        };
+        msg.callback(null, response);
+        testEmitter.emit('questersSubmitted', response);
     });
     socket.once('selectQuesterSucceeded', function (msg) {
         t.deepEqual(msg, {
@@ -362,10 +371,117 @@ test('test select and remove questers', function (t) {
             requestingPlayerId: playerId,
             sessionId: sessionId
         }, 'make sure the correct quester is removed');
-        t.end();
     });
     socket.emit('removeQuester', {gameId: gameId, playerId: playerId});
+    socket.emit('selectQuester', {gameId: gameId, playerId: player1});
+    socket.on('submitQuestersSucceeded', function (msg) {
+        t.deepEqual(msg, {
+            gameId: gameId,
+            selectedQuesters: [playerId, player1],
+            sessionId: sessionId
+        }, 'make sure we can submit questers');
+        t.end();
+    });
+    socket.emit('submitQuesters', {gameId: gameId});
+});
 
+
+test('test voteAcceptReject', function (t) {
+    var sessionId = 'sessionSocket0',
+        playerId = 'player0',
+        ownerId = playerId,
+        player1 = 'player1',
+        gameId = 'game0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED'],
+        testEmitter = newEmitter(),
+        io = new Socket('io'),
+        socket = new Socket(sessionId),
+        sockets = [socket],
+        sessionController = new SessionController(testEmitter, io),
+        players = [],
+        selectedQuesters = [],
+        votes = {};
+
+    t.plan(16);
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    testEmitter.on('selectQuester', function (msg) {
+        var response = {
+            gameId: msg.gameId,
+            selectedQuesterId: msg.playerId,
+            requestingPlayerId: msg.requestingPlayerId,
+            playerId: playerId
+        };
+        selectedQuesters.push(msg.playerId);
+        msg.callback(null, response);
+        testEmitter.emit('questerSelected', response);
+    });
+    testEmitter.once('submitQuesters', function (msg) {
+        var response = {
+            gameId: gameId,
+            selectedQuesters: [playerId, player1]
+        };
+        msg.callback(null, response);
+        testEmitter.emit('questersSubmitted', response);
+    });
+    testEmitter.on('voteAcceptReject', function (msg) {
+        var response = {
+            gameId: msg.gameId,
+            playerId: msg.playerId,
+            vote: msg.vote
+        };
+        votes[msg.playerId] = msg.vote;
+        msg.callback(null, response);
+        testEmitter.emit('votedOnQuesters', response);
+        if (Object.keys(votes).length >= 7) {
+            var netAccepts = _.reduce(votes, function (memo, num) {
+                return memo + num;
+            }, 0);
+            if (netAccepts > 0) {
+                votes = {};
+                testEmitter.emit('questAccepted', {
+                    gameId: gameId,
+                    players: selectedQuesters,
+                    votes: votes
+                });
+            } else {
+                votes = {};
+                testEmitter.emit('questRejected', {
+                    gameId: gameId,
+                    players: selectedQuesters,
+                    votes: votes
+                });
+            }
+        }
+
+    });
+
+    testEmitter.once('questAccepted', function (msg) {
+        t.ok(msg, 'Make sure the quest was accepted after 7 ACCEPT votes');
+    });
+    testEmitter.once('questRejected', function (msg) {
+        t.ok(msg, 'Make sure the quest was rejected after 7 REJECT votes');
+    });
+    socket.emit('selectQuester', {gameId: gameId, playerId: playerId});
+    socket.emit('selectQuester', {gameId: gameId, playerId: player1});
+    socket.emit('submitQuesters', {gameId: gameId});
+    _.times(7, function (i) {
+        sockets[i].once('voteAcceptRejectSucceeded', function (msg) {
+            t.deepEqual(msg, {gameId: gameId, playerId: players[i], vote: VOTE.REJECT, sessionId: sockets[i].id},
+                'Make sure the reject vote is correctly reported');
+        });
+        sockets[i].emit('voteAcceptReject', {gameId: gameId, playerId: players[i], vote: VOTE.REJECT});
+    });
+    sockets[1].emit('selectQuester', {gameId: gameId, playerId: playerId});
+    sockets[1].emit('selectQuester', {gameId: gameId, playerId: player1});
+    sockets[1].emit('submitQuesters', {gameId: gameId});
+    _.times(7, function (i) {
+        sockets[i].once('voteAcceptRejectSucceeded', function (msg) {
+            t.deepEqual(msg, {gameId: gameId, playerId: players[i], vote: VOTE.ACCEPT, sessionId: sockets[i].id},
+                'Make sure the accept vote is correctly reported');
+        });
+        sockets[i].emit('voteAcceptReject', {gameId: gameId, playerId: players[i], vote: VOTE.ACCEPT});
+    });
 });
 
 function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets) {

@@ -200,7 +200,7 @@ SessionController.prototype._submitQuesters = function (sessionSocketId, gameId)
             }
             session.socket.emit('submitQuestersSucceeded', {
                 gameId: msg.gameId,
-                requestingPlayerId: msg.requestingPlayerId,
+                selectedQuesters: msg.selectedQuesters,
                 sessionId: sessionSocketId
             });
 
@@ -226,6 +226,7 @@ SessionController.prototype._voteAcceptReject = function (sessionSocketId, vote,
                 session.socket.emit('voteAcceptRejectFailed', error);
                 return;
             }
+
             session.socket.emit('voteAcceptRejectSucceeded', {
                 gameId: msg.gameId,
                 playerId: msg.playerId,
@@ -356,7 +357,6 @@ SessionController.prototype.init = function () {
     this.emitter.on('gameJoined', function(msg){self.io.emit('gameJoined', msg)});
     this.emitter.on('gameStarted', function(msg){self.io.emit('gameStarted', msg)});
     this.emitter.on('questerSelected', function(msg){self.io.emit('questerSelected', msg)});
-
 };
 
 exports.SessionController = SessionController;
