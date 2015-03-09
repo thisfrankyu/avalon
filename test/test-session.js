@@ -616,13 +616,18 @@ function initGame(sessionController, io, socket, testEmitter, players, ownerId, 
         sockets[i].emit('registerPlayer', {playerId: 'player' + i});
         sockets[i].emit('joinGame', {gameId: gameId, playerId: 'player' + i});
     });
+    var playersMap = _.reduce(players, function(memo, num){
+        memo[num] = num; return memo;
+    }, {});
     testEmitter.on('startGame', function (msg) {
-        msg.callback(null, {
+        var response = {
             gameId: gameId,
-            players: players,
+            players: playersMap,
             badSpecialRoles: badSpecialRoles,
             goodSpecialRoles: goodSpecialRoles
-        });
+        };
+        msg.callback(null, response);
+        testEmitter.emit('gameStarted', response);
     });
     socket.emit('startGame', {gameId: gameId});
 }

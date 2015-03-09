@@ -15,9 +15,9 @@ var QUEST_STATE = require('./quest').QUEST_STATE;
 
 function GameController(emitter) {
     this.emitter = emitter;
-    this.sessions = {};
-    this.players = {};
-    this.games = {};
+    this.sessions = {}; //sessionId --> session
+    this.players = {}; //playerId --> player
+    this.games = {}; //gameId --> game
 }
 
 GameController.prototype.exec = function (apiCall, callback) {
@@ -119,7 +119,7 @@ GameController.prototype._handleStartGame = function (msg) {
 
     var gameStartedMsg = {
         gameId: gameId,
-        players: _.keys(game.players),
+        players: game.players,
         badSpecialRoles: game.badSpecialRoles,
         goodSpecialRoles: game.goodSpecialRoles
     };
@@ -212,6 +212,7 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
         this.emitter.emit('questRejected', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
+            numRejections: game.currentQuest().numRejections,
             votes: result.votes
         });
     }
@@ -266,16 +267,15 @@ GameController.prototype._handleVoteSuccessFail = function (msg) {
 };
 
 GameController.prototype._targetMerlin = function (targetId, requestingPlayerId, gameId, callback) {
-    var msg = {},
-        game;
+    var game = this.games[gameId],
+        msg;
     this._validateGame(gameId);
-
-    game = this.games[gameId];
     game.targetMerlin(targetId, requestingPlayerId);
-
-    msg.targetId = targetId;
-    msg.requestingPlayerId = requestingPlayerId;
-    msg.gameId = gameId;
+    msg = {
+        targetId: targetId,
+        requestingPlayerId: requestingPlayerId,
+        gameId: gameId
+    };
     if (callback) callback(null, msg);
     this.emitter.emit('merlinTargeted', msg);
 };
@@ -290,16 +290,14 @@ GameController.prototype._handleTargetMerlin = function (msg) {
 };
 
 GameController.prototype._attemptKillMerlin = function (requestingPlayerId, gameId, callback) {
-    var msg = {},
-        game;
+    var game = this.games[gameId], msg;
     this._validateGame(gameId);
-
-    game = this.games[gameId];
     game.killTargetMerlin(requestingPlayerId);
-
-    msg.requestingPlayerId = requestingPlayerId;
-    msg.gameId = gameId;
-    msg.stage = game.stage;
+    msg = {
+        requestingPlayerId: requestingPlayerId,
+        gameId: gameId,
+        stage: game.stage
+    };
     if (callback) callback(null, msg);
     this.emitter.emit('killMerlinAttempted', msg);
 };

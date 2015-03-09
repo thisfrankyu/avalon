@@ -1,3 +1,5 @@
+var _ = require('underscore');
+
 function Session(sessionSocket) {
     this.id = sessionSocket.id;
     this.socket = sessionSocket;
@@ -8,7 +10,12 @@ function SessionController(emitter, io) {
     this.emitter = emitter;
     this.io = io;
     this.sessions = {}; //sessionSocketId -> session;
+    this.playersToSessions = {}; //playerId --> session
 }
+
+SessionController.prototype.sessionByPlayerId = function (playerId) {
+    return this.playersToSessions[playerId];
+};
 
 SessionController.prototype.exec = function (apiCall) {
     try {
@@ -26,7 +33,8 @@ SessionController.prototype._validateRegistered = function (sessionSocketId) {
 };
 
 SessionController.prototype._registerPlayer = function (sessionSocketId, playerId) {
-    var session = this.sessions[sessionSocketId];
+    var session = this.sessions[sessionSocketId],
+        self = this;
     if (session.playerId !== null) {
         var error = new Error('session already has a playerId ' + session.playerId);
 
@@ -41,6 +49,7 @@ SessionController.prototype._registerPlayer = function (sessionSocketId, playerI
                 return;
             }
             session.playerId = playerId;
+            self.playersToSessions[playerId] = session;
             session.socket.emit('registerPlayerSucceeded', {playerId: msg.playerId, sessionId: sessionSocketId});
         }
     });
@@ -347,16 +356,76 @@ SessionController.prototype._registerSession = function (sessionSocket) {
 
 };
 
+SessionController.prototype._gameStarted = function (gameId, players, badSpecialRoles, goodSpecialRoles) {
+    var self = this;
+    _.each(players, function (player, playerId) {
+        var session = self.sessionByPlayerId(playerId),
+            gameStartedMsg = {
+                playerId: playerId,
+                role: player.role,
+                view: player.view,
+                badSpecialRoles: badSpecialRoles,
+                goodSpecialRoles: goodSpecialRoles
+            };
+        session.socket.emit('gameStarted', gameStartedMsg);
+    });
+};
 
+SessionController.prototype._handleGameStarted = function (msg) {
+    var gameId = msg.gameId,
+        players = msg.players,
+        badSpecialRoles = msg.badSpecialRoles,
+        goodSpecialRoles = msg.goodSpecialRoles;
+    this.exec(this._gameStarted.bind(this, gameId, players, badSpecialRoles, goodSpecialRoles));
+};
+
+SessionController.prototype._handleVotedOnQuesters = function (msg) {
+    var gameId = msg.gameId,
+        playerId = msg.playerId;
+    this.io.emit('votedOnQuesters', {gameId: gameId, playerId: playerId});
+};
+
+SessionController.prototype._handleVotedOnSuccessFail = function (msg) {
+    var gameId = msg.gameId,
+        playerId = msg.playerId;
+    this.io.emit('votedOnSuccessFail', {gameId: gameId, playerId: playerId});
+};
+
+SessionController.prototype._handleQuestEnded = function (msg) {
+    var response = {
+        gameId: msg.gameId,
+        votes: _.values(msg.votes),
+        questResult: msg.voteResult,
+        questIndex: msg.questIndex,
+        nextQuest: msg.nextQuest
+    };
+    this.io.emit('questEnded', response);
+};
+
+SessionController.prototype._passEventToClient = function (event) {
+    var self = this;
+    this.emitter.on(event, function (msg) {
+        self.io.emit(event, msg);
+    });
+};
 
 SessionController.prototype.init = function () {
-    var self = this;
     this.io.on('connection', this._registerSession.bind(this));
-    this.emitter.on('playerRegistered', function(msg){self.io.emit('playerRegistered', msg)});
-    this.emitter.on('gameCreated', function(msg){self.io.emit('gameCreated', msg)});
-    this.emitter.on('gameJoined', function(msg){self.io.emit('gameJoined', msg)});
-    this.emitter.on('gameStarted', function(msg){self.io.emit('gameStarted', msg)});
-    this.emitter.on('questerSelected', function(msg){self.io.emit('questerSelected', msg)});
+    this._passEventToClient('playerRegistered');
+    this._passEventToClient('gameCreated');
+    this._passEventToClient('gameJoined');
+    this.emitter.on('gameStarted', this._handleGameStarted.bind(this));
+    this._passEventToClient('questerSelected');
+    this._passEventToClient('questerRemoved');
+    this._passEventToClient('questersSubmitted');
+    this.emitter.on('votedOnQuesters', this._handleVotedOnQuesters.bind(this));
+    this._passEventToClient('questAccepted');
+    this._passEventToClient('questRejected');
+    this.emitter.on('votedOnSuccessFail', this._handleVotedOnSuccessFail.bind(this));
+    this.emitter.on('questEnded', this._handleQuestEnded.bind(this));
+    this._passEventToClient('killMerlinStage');
+    this._passEventToClient('merlinTargeted');
+    this._passEventToClient('killMerlinAttempted');
 };
 
 exports.SessionController = SessionController;

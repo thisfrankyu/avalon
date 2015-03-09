@@ -39,7 +39,7 @@ function Game(gameId, ownerId, options) {
     this.numRejections = 0;
 
     this.questIndex = 0;
-    this.quests = [];
+    this.quests = []; //quest
     this.currentVotesOnQuest = {}; //playerId --> vote
     this.currentSuccessFailVotes = {}; //playerId --> vote
 

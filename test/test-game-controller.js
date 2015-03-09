@@ -164,7 +164,7 @@ test('test startGame', function (t) {
 
         t.equal(game.stage, STAGES.SELECT_QUESTERS,
             'Make sure the game has started and we are now in the SELECT_QUESTERS phase');
-        _.each(_.values(game.players), function (player) {
+        _.each(_.values(msg.players), function (player) {
             t.notEqual(player.role, null,
                 'Make sure each player has a role: ' + player.id + ' is ' + player.role);
         });
