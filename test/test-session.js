@@ -126,8 +126,8 @@ test('test create game', function (t) {
             badSpecialRoles: badSpecialRoles
         }
     });
-    socket.once('createGameFailed', function (error) {
-        t.equal(error.message, gameId + ' has already been created', 'make sure createGameFailed sent back to user');
+    socket.once('createGameFailed', function (errorMessage) {
+        t.equal(errorMessage, gameId + ' has already been created', 'make sure createGameFailed sent back to user');
         t.end();
     });
     testEmitter.once('createGame', function (msg) {
@@ -221,8 +221,8 @@ test('test join game', function (t) {
     testEmitter.once('error', function (error) {
         t.equal(error.message, 'random error from join game', 'make sure that failing on join game gets back to client');
     });
-    socket1.once('joinGameFailed', function (error) {
-        t.equal(error.message, 'random error from join game', 'make sure that failing on join game gets back to client');
+    socket1.once('joinGameFailed', function (errorMessage) {
+        t.equal(errorMessage, 'random error from join game', 'make sure that failing on join game gets back to client');
         t.end();
     });
     socket1.emit('joinGame', {gameId: gameId, playerId: player1});
@@ -637,8 +637,8 @@ function errorOnce(eventName, testEmitter, socket, t, msg) {
         t.equal(error.message, 'error on ' + eventName,
             'make sure error on ' + eventName + ' gets emitted');
     });
-    socket.once(eventName + 'Failed', function (error) {
-        t.equal(error.message, 'error on ' + eventName,
+    socket.once(eventName + 'Failed', function (errorMessage) {
+        t.equal(errorMessage, 'error on ' + eventName,
             'make sure ' + eventName + 'Failed gets emitted');
     });
     testEmitter.once(eventName, function (msg) {

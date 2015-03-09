@@ -38,14 +38,14 @@ SessionController.prototype._registerPlayer = function (sessionSocketId, playerI
     if (session.playerId !== null) {
         var error = new Error('session already has a playerId ' + session.playerId);
 
-        session.socket.emit('registerPlayerFailed', error);
+        session.socket.emit('registerPlayerFailed', error.message);
         throw error;
     }
     this.emitter.emit('registerPlayer', {
         playerId: playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('registerPlayerFailed', error);
+                session.socket.emit('registerPlayerFailed', error.message);
                 return;
             }
             session.playerId = playerId;
@@ -70,7 +70,7 @@ SessionController.prototype._createGame = function (sessionSocketId, gameId, gam
         gameOptions: gameOptions,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('createGameFailed', error);
+                session.socket.emit('createGameFailed', error.message);
                 return;
             }
             session.socket.emit('createGameSucceeded', {
@@ -95,7 +95,7 @@ SessionController.prototype._joinGame = function (sessionSocketId, gameId) {
         playerId: session.playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('joinGameFailed', error);
+                session.socket.emit('joinGameFailed', error.message);
                 return;
             }
             session.socket.emit('joinGameSucceeded', {
@@ -123,7 +123,7 @@ SessionController.prototype._startGame = function (sessionSocketId, gameId) {
         playerId: session.playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('startGameFailed', error);
+                session.socket.emit('startGameFailed', error.message);
                 return;
             }
             session.socket.emit('startGameSucceeded', {
@@ -151,7 +151,7 @@ SessionController.prototype._selectQuester = function (sessionSocketId, playerId
         playerId: playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('selectQuesterFailed', error);
+                session.socket.emit('selectQuesterFailed', error.message);
                 return;
             }
             session.socket.emit('selectQuesterSucceeded', {
@@ -177,7 +177,7 @@ SessionController.prototype._removeQuester = function (sessionSocketId, playerId
         playerId: playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('removeQuesterFailed', error);
+                session.socket.emit('removeQuesterFailed', error.message);
                 return;
             }
             session.socket.emit('removeQuesterSucceeded', {
@@ -204,7 +204,7 @@ SessionController.prototype._submitQuesters = function (sessionSocketId, gameId)
         requestingPlayerId: session.playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('submitQuestersFailed', error);
+                session.socket.emit('submitQuestersFailed', error.message);
                 return;
             }
             session.socket.emit('submitQuestersSucceeded', {
@@ -232,7 +232,7 @@ SessionController.prototype._voteAcceptReject = function (sessionSocketId, vote,
         vote: vote,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('voteAcceptRejectFailed', error);
+                session.socket.emit('voteAcceptRejectFailed', error.message);
                 return;
             }
 
@@ -261,7 +261,7 @@ SessionController.prototype._voteSuccessFail = function (sessionSocketId, vote, 
         vote: vote,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('voteSuccessFailFailed', error);
+                session.socket.emit('voteSuccessFailFailed', error.message);
                 return;
             }
             session.socket.emit('voteSuccessFailSucceeded', {
@@ -289,7 +289,7 @@ SessionController.prototype._targetMerlin = function (sessionSocketId, targetId,
         targetId: targetId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('targetMerlinFailed', error);
+                session.socket.emit('targetMerlinFailed', error.message);
                 return;
             }
             session.socket.emit('targetMerlinSucceeded', {
@@ -318,7 +318,7 @@ SessionController.prototype._attemptKillMerlin = function (sessionSocketId, game
         requestingPlayerId: session.playerId,
         callback: function (error, msg) {
             if (error) {
-                session.socket.emit('killMerlinAttemptFailed', error);
+                session.socket.emit('killMerlinAttemptFailed', error.message);
                 return;
             }
             session.socket.emit('killMerlinAttemptSucceeded', {
