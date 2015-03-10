@@ -324,6 +324,7 @@ SessionController.prototype._attemptKillMerlin = function (sessionSocketId, game
             session.socket.emit('killMerlinAttemptSucceeded', {
                 gameId: msg.gameId,
                 requestingPlayerId: msg.requestingPlayerId,
+                stage: msg.stage,
                 sessionId: sessionSocketId
             });
 

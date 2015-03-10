@@ -6,6 +6,7 @@ var EventEmitter = require('events').EventEmitter;
 var newEmitter = require('../communication/emitter').newEmitter;
 var VOTE = require('../game/quest').VOTE;
 var QUEST_STATE = require('../game/quest').QUEST_STATE;
+var STAGES = require('../game/engine').STAGES;
 
 function Socket(id) {
     this.id = id;
@@ -567,6 +568,71 @@ test('test voteSuccessFail', function (t) {
 
 });
 
+
+test('test voteSuccessFail', function (t) {
+    var sessionId = 'sessionSocket0',
+        playerId = 'player0',
+        ownerId = playerId,
+        player1 = 'player1',
+        gameId = 'game0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED'],
+        testEmitter = newEmitter(),
+        io = new Socket('io'),
+        socket = new Socket(sessionId),
+        sockets = [socket],
+        sessionController = new SessionController(testEmitter, io),
+        players = [],
+        selectedQuesters = [playerId, player1],
+        votes = {};
+
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    errorOnce('targetMerlin', testEmitter, socket, t, {
+        gameId: gameId,
+        requestingPlayerId: playerId,
+        targetId: 'playerX'
+    });
+    errorOnce('killMerlin', testEmitter, socket, t, {gameId: gameId, requestingPlayerId: playerId});
+    testEmitter.on('targetMerlin', function (msg) {
+        var response = {
+            targetId: msg.targetId,
+            requestingPlayerId: msg.requestingPlayerId,
+            gameId: msg.gameId
+        };
+        msg.callback(null, response);
+        testEmitter.emit('merlinTargeted', response);
+    });
+    testEmitter.once('killMerlin', function (msg) {
+        var response = {
+            requestingPlayerId: msg.requestingPlayerId,
+            gameId: gameId,
+            stage: STAGES.BAD_WINS
+        };
+        msg.callback(null, response);
+        testEmitter.emit('killMerlinAttempted', response);
+    });
+    socket.once('targetMerlinSucceeded', function (msg) {
+        t.deepEqual(msg, {
+            gameId: gameId,
+            requestingPlayerId: playerId,
+            targetId: player1,
+            sessionId: sessionId
+        }, 'make sure that targetMerlinSucceeded is reported correctly');
+    });
+    socket.once('killMerlinAttemptSucceeded', function (msg) {
+        t.deepEqual(msg, {
+                gameId: gameId,
+                requestingPlayerId: playerId,
+                stage: STAGES.BAD_WINS,
+                sessionId: sessionId
+            },
+            'make sure killMerlinAttemptSucceeded is reported correctly');
+        t.end();
+    });
+    socket.emit('targetMerlin', {gameId: gameId, targetId: player1});
+    socket.emit('killMerlin', {gameId: gameId});
+});
+
 function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets) {
     sessionController.init();
     io.emit('connection', socket);
@@ -616,8 +682,9 @@ function initGame(sessionController, io, socket, testEmitter, players, ownerId, 
         sockets[i].emit('registerPlayer', {playerId: 'player' + i});
         sockets[i].emit('joinGame', {gameId: gameId, playerId: 'player' + i});
     });
-    var playersMap = _.reduce(players, function(memo, num){
-        memo[num] = num; return memo;
+    var playersMap = _.reduce(players, function (memo, num) {
+        memo[num] = num;
+        return memo;
     }, {});
     testEmitter.on('startGame', function (msg) {
         var response = {
