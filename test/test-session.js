@@ -44,7 +44,7 @@ test('test register player', function (t) {
     io.emit('connection', socket);
     io.emit('connection', socket1);
     errorOnce('registerPlayer', testEmitter, socket, t, {playerId: 'playerX'});
-    socket.on('registerPlayer:ack', function (msg) {
+    socket.on('registerPlayerAck', function (msg) {
         if (_.has(msg, 'sessionId')) {
             session = sessionController.sessions[sessionId];
             t.equal(session.playerId, playerId,
@@ -65,7 +65,7 @@ test('test register player', function (t) {
         t.equal(error.message, 'session already has a playerId player0',
             'make sure error was thrown for already registered player');
     });
-    socket1.once('registerPlayer:error', function (msg) {
+    socket1.once('registerPlayerNack', function (msg) {
         t.ok(msg, 'We should not be able to register with an ID that is already being used');
     });
     testEmitter.once('error', function (error) {
@@ -109,7 +109,7 @@ test('test create game', function (t) {
         msg.callback(null, response);
         testEmitter.emit('gameCreated', response);
     });
-    socket.once('createGame:ack', function (msg) {
+    socket.once('createGameAck', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             gameOptions: {
@@ -127,7 +127,7 @@ test('test create game', function (t) {
             badSpecialRoles: badSpecialRoles
         }
     });
-    socket.once('createGame:error', function (errorMessage) {
+    socket.once('createGameNack', function (errorMessage) {
         t.equal(errorMessage, gameId + ' has already been created', 'make sure createGameFailed sent back to user');
         t.end();
     });
@@ -193,7 +193,7 @@ test('test join game', function (t) {
         testEmitter.emit('gameJoined', response);
     });
 
-    socket1.once('joinGame:ack', function (msg) {
+    socket1.once('joinGameAck', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             ownerId: ownerId,
@@ -222,7 +222,7 @@ test('test join game', function (t) {
     testEmitter.once('error', function (error) {
         t.equal(error.message, 'random error from join game', 'make sure that failing on join game gets back to client');
     });
-    socket1.once('joinGame:error', function (errorMessage) {
+    socket1.once('joinGameNack', function (errorMessage) {
         t.equal(errorMessage, 'random error from join game', 'make sure that failing on join game gets back to client');
         t.end();
     });
@@ -303,7 +303,7 @@ test('test start game', function (t) {
             goodSpecialRoles: goodSpecialRoles
         });
     });
-    socket.once('startGame:ack', function (msg) {
+    socket.once('startGameAck', function (msg) {
         t.deepEqual(msg, {
                 gameId: gameId,
                 players: players,
@@ -358,7 +358,7 @@ test('test select and remove questers', function (t) {
         msg.callback(null, response);
         testEmitter.emit('questersSubmitted', response);
     });
-    socket.once('selectQuester:ack', function (msg) {
+    socket.once('selectQuesterAck', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             selectedQuesterId: playerId,
@@ -377,7 +377,7 @@ test('test select and remove questers', function (t) {
         msg.callback(null, response);
         testEmitter.emit('questerSelected', response);
     });
-    socket.once('removeQuester:ack', function (msg) {
+    socket.once('removeQuesterAck', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             removedQuesterId: playerId,
@@ -387,7 +387,7 @@ test('test select and remove questers', function (t) {
     });
     socket.emit('removeQuester', {gameId: gameId, playerId: playerId});
     socket.emit('selectQuester', {gameId: gameId, playerId: player1});
-    socket.on('submitQuesters:ack', function (msg) {
+    socket.on('submitQuestersAck', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             selectedQuesters: [playerId, player1],
@@ -480,7 +480,7 @@ test('test voteAcceptReject', function (t) {
     socket.emit('selectQuester', {gameId: gameId, playerId: player1});
     socket.emit('submitQuesters', {gameId: gameId});
     _.times(7, function (i) {
-        sockets[i].once('voteAcceptReject:ack', function (msg) {
+        sockets[i].once('voteAcceptRejectAck', function (msg) {
             t.deepEqual(msg, {gameId: gameId, playerId: players[i], vote: VOTE.REJECT, sessionId: sockets[i].id},
                 'Make sure the reject vote is correctly reported');
         });
@@ -490,7 +490,7 @@ test('test voteAcceptReject', function (t) {
     sockets[1].emit('selectQuester', {gameId: gameId, playerId: player1});
     sockets[1].emit('submitQuesters', {gameId: gameId});
     _.times(7, function (i) {
-        sockets[i].once('voteAcceptReject:ack', function (msg) {
+        sockets[i].once('voteAcceptRejectAck', function (msg) {
             t.deepEqual(msg, {gameId: gameId, playerId: players[i], vote: VOTE.ACCEPT, sessionId: sockets[i].id},
                 'Make sure the accept vote is correctly reported');
         });
@@ -536,11 +536,11 @@ test('test voteSuccessFail', function (t) {
             });
         }
     });
-    sockets[0].once('voteSuccessFail:ack', function (msg) {
+    sockets[0].once('voteSuccessFailAck', function (msg) {
         t.deepEqual(msg, {gameId: gameId, playerId: playerId, vote: VOTE.SUCCESS, sessionId: 'sessionSocket0'},
             'Make sure player0 has his vote reported correctly');
     });
-    sockets[1].once('voteSuccessFail:ack', function (msg) {
+    sockets[1].once('voteSuccessFailAck', function (msg) {
         t.deepEqual(msg, {gameId: gameId, playerId: player1, vote: VOTE.SUCCESS, sessionId: 'sessionSocket1'},
             'Make sure player1 has his vote reported correctly');
     });
@@ -611,7 +611,7 @@ test('test voteSuccessFail', function (t) {
         msg.callback(null, response);
         testEmitter.emit('killMerlinAttempted', response);
     });
-    socket.once('targetMerlin:ack', function (msg) {
+    socket.once('targetMerlinAck', function (msg) {
         t.deepEqual(msg, {
             gameId: gameId,
             requestingPlayerId: playerId,
@@ -619,7 +619,7 @@ test('test voteSuccessFail', function (t) {
             sessionId: sessionId
         }, 'make sure that targetMerlinSucceeded is reported correctly');
     });
-    socket.once('killMerlinAttempt:ack', function (msg) {
+    socket.once('killMerlinAttemptAck', function (msg) {
         t.deepEqual(msg, {
                 gameId: gameId,
                 requestingPlayerId: playerId,
@@ -704,7 +704,7 @@ function errorOnce(eventName, testEmitter, socket, t, msg) {
         t.equal(error.message, 'error on ' + eventName,
             'make sure error on ' + eventName + ' gets emitted');
     });
-    socket.once(eventName + ':error', function (errorMessage) {
+    socket.once(eventName + 'Nack', function (errorMessage) {
         t.equal(errorMessage, 'error on ' + eventName,
             'make sure ' + eventName + 'Failed gets emitted');
     });
