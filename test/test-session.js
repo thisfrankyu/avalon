@@ -7,6 +7,7 @@ var newEmitter = require('../communication/emitter').newEmitter;
 var VOTE = require('../game/quest').VOTE;
 var QUEST_STATE = require('../game/quest').QUEST_STATE;
 var STAGES = require('../game/engine').STAGES;
+var Player = require('../game/player');
 
 function Socket(id) {
     this.id = id;
@@ -295,14 +296,21 @@ test('test start game', function (t) {
     });
 
 
+    var playersMap = _.reduce(players, function (memo, num) {
+        memo[num] = new Player(num);
+        return memo;
+    }, {});
     testEmitter.on('startGame', function (msg) {
-        msg.callback(null, {
+        var response = {
             gameId: gameId,
-            players: players,
+            players: playersMap,
             badSpecialRoles: badSpecialRoles,
             goodSpecialRoles: goodSpecialRoles
-        });
+        };
+        msg.callback(null, response);
+        testEmitter.emit('gameStarted', response);
     });
+
     socket.once('startGameAck', function (msg) {
         t.deepEqual(msg, {
                 gameId: gameId,
