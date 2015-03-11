@@ -128,7 +128,7 @@ SessionController.prototype._startGame = function (sessionSocketId, gameId) {
             }
             session.socket.emit('startGameAck', {
                 gameId: msg.gameId,
-                players: msg.players,
+                players: _.keys(msg.players),
                 badSpecialRoles: msg.badSpecialRoles,
                 goodSpecialRoles: msg.goodSpecialRoles,
                 sessionId: sessionSocketId

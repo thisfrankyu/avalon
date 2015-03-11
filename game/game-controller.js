@@ -90,7 +90,7 @@ GameController.prototype._handleJoinGame = function (msg) {
         gameId: game.id,
         ownerId: game.ownerId,
         joinedPlayerId: msg.playerId,
-        players: _.keys(game.players),
+        players: game.players,
         badSpecialRoles: game.badSpecialRoles,
         goodSpecialRoles: game.goodSpecialRoles
     };
