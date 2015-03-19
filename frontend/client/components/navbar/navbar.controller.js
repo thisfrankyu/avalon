@@ -5,6 +5,9 @@ angular.module('avalonApp')
     $scope.menu = [{
       'title': 'Home',
       'link': '/'
+    },{
+      'title': 'Create Game',
+      'link': '/createGame'
     }];
 
     $scope.isCollapsed = true;
