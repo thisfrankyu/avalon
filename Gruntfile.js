@@ -93,7 +93,10 @@ module.exports = function (grunt) {
           '<%= yeoman.client %>/assets/images/{,*//*}*.{png,jpg,jpeg,gif,webp,svg}'
         ],
         options: {
-          livereload: true
+          livereload: {
+              key: grunt.file.read('certs/key.pem'),
+              cert: grunt.file.read('certs/cert.pem')
+          }
         }
       },
       express: {
@@ -102,7 +105,10 @@ module.exports = function (grunt) {
         ],
         tasks: ['express:dev', 'wait'],
         options: {
-          livereload: true,
+          livereload: {
+              key: grunt.file.read('certs/key.pem'),
+              cert: grunt.file.read('certs/cert.pem')
+          },
           nospawn: true //Without this option specified express won't be reloaded
         }
       }
@@ -497,7 +503,7 @@ module.exports = function (grunt) {
           ]
         }
       }
-    },
+    }
   });
 
   // Used for delaying livereload until after server has restarted
