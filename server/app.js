@@ -8,20 +8,20 @@
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
 var fs = require('fs');
-var _ = require('underscore')
+var _ = require('underscore');
 var express = require('express');
 var config = require('./config/environment');
 // Setup server
 var app = express();
 
-var privateKey = fs.readFileSync('../certs/key.pem', 'utf8');
-var certificate = fs.readFileSync('../certs/cert.pem', 'utf8');
+var privateKey = fs.readFileSync('certs/key.pem', 'utf8');
+var certificate = fs.readFileSync('certs/cert.pem', 'utf8');
 var credentials = {key: privateKey, cert: certificate};
 var https = require('https');
 
-var SessionController = require('../../session/session').SessionController;
-var GameController = require('../../game/game-controller').GameController;
-var newEmitter = require('../../communication/emitter').newEmitter;
+var SessionController = require('../session/session').SessionController;
+var GameController = require('../game/game-controller').GameController;
+var newEmitter = require('../communication/emitter').newEmitter;
 
 //var server = require('http').createServer(app);
 var server = https.createServer(credentials, app);
