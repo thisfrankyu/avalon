@@ -4,7 +4,7 @@ angular.module('avalonApp')
   .controller('CreateGameCtrl', function ($scope, socket) {
     socket.emit('registerPlayer', {playerId: 'player0'});
     socket.on('registerPlayerAck', function(msg) {
-      alert(JSON.stringify(msg));
+      console.log(JSON.stringify(msg));
     });
 
     $scope.roles = {
@@ -39,7 +39,7 @@ angular.module('avalonApp')
         }
       });
       socket.on('createGameAck', function(msg) {
-        alert(JSON.stringify(msg));
+        console.log(JSON.stringify(msg));
       });
     };
   });
