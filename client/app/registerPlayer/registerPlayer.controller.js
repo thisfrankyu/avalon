@@ -1,12 +1,13 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('RegisterPlayerCtrl', function ($scope, socket) {
+  .controller('RegisterPlayerCtrl', function ($scope, socket, player) {
 
     $scope.playerId = 'enter id';
 
     $scope.registerPlayer = function(playerId) {
       $scope.playerId = playerId;
+      player.id = playerId;
       socket.emit('registerPlayer',{
         playerId: $scope.playerId
       });
