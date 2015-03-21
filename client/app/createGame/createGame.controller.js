@@ -2,11 +2,6 @@
 
 angular.module('avalonApp')
   .controller('CreateGameCtrl', function ($scope, socket) {
-    socket.emit('registerPlayer', {playerId: 'player0'});
-    socket.on('registerPlayerAck', function(msg) {
-      console.log(JSON.stringify(msg));
-    });
-
     $scope.roles = {
       goodRoles: ['Merlin', 'Percival'],
       badRoles: ['Morgana', 'Mordred', 'Assassin', 'Oberon'],
