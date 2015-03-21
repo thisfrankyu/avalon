@@ -68,7 +68,8 @@ test('test createGame', function (t) {
         t.equal(msg.gameId, gameId, 'make sure that the gameId is reported correctly');
         t.equal(game.ownerId, playerId, 'make sure the owner of the game is the playerId that created it');
         t.equal(msg.ownerId, playerId, 'make sure the owner of the game is correctly reported');
-
+        t.deepEqual(msg.gameOptions, {goodSpecialRoles : game.goodSpecialRoles, badSpecialRoles : game.badSpecialRoles},
+            'make sure that the game reports the gameOptions');
     });
     testEmitter.emit('registerPlayer', {playerId: playerId});
     testEmitter.once('error', function (e) {

@@ -68,8 +68,10 @@ GameController.prototype._handleCreateGame = function (msg) {
     var gameCreatedMsg = {
         gameId: game.id,
         ownerId: game.ownerId,
-        badSpecialRoles: game.badSpecialRoles,
-        goodSpecialRoles: game.goodSpecialRoles,
+        gameOptions: {
+            badSpecialRoles: game.badSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles,
+        },
         gameFromController: this.games[game.id]
     };
     if (msg.callback) msg.callback(null, gameCreatedMsg);
