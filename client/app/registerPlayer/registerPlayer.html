@@ -1,0 +1,19 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<header class="hero-unit" id="banner">
+  <div class="container">
+    <h1>Create Game</h1>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-12">
+      <h1 class="page-header">RegisterPlayer:</h1>
+      <input type="text" ng-model="playerId">
+      <button class="btn btn-success" ng-click="registerPlayer(playerId)">Submit</button>
+    </div>
+  </div>
+</div>
+
+<div ng-include="'components/footer/footer.html'"></div>
