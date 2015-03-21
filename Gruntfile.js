@@ -322,7 +322,7 @@ module.exports = function (grunt) {
           removeScriptTypeAttributes: true,
           removeStyleLinkTypeAttributes: true
         },
-        usemin: 'app/app.js'
+        usemin: 'static/app.js'
       },
       main: {
         cwd: '<%= yeoman.client %>',
@@ -371,7 +371,22 @@ module.exports = function (grunt) {
             'package.json',
             'server/**/*'
           ]
+        }, {
+          expand: true,
+          dest: '<%= yeoman.dist %>',
+          src: [
+            'certs/**/*',
+            'communication/**/*',
+            'game/**/*',
+            'session/**/*'
+          ]
         }]
+      },
+      'dist-debug': {
+        expand: true,
+        cwd: '.tmp/concat',
+        dest: '<%= yeoman.dist %>/public',
+        src: ['static/**/*']
       },
       styles: {
         expand: true,
@@ -614,6 +629,7 @@ module.exports = function (grunt) {
     'cdnify',
     'cssmin',
     'uglify',
+    //'copy:dist-debug',
     'rev',
     'usemin'
   ]);
