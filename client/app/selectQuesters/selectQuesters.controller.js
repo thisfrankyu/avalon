@@ -17,7 +17,7 @@ angular.module('avalonApp')
       socket.once('selectQuesterNack', function () {
         $scope.questers[selectedQuesterId] = false;
       });
-      socket.once('selectQuesterAck', function(){
+      socket.once('selectQuesterAck', function () {
         socket.removeAllListeners('selectQuesterNack');
       })
     }
@@ -30,27 +30,21 @@ angular.module('avalonApp')
       socket.once('removeQuesterNack', function () {
         $scope.questers[selectedQuesterId] = true;
       });
-      socket.once('removeQuesterAck', function(){
+      socket.once('removeQuesterAck', function () {
         socket.removeAllListeners('removeQuesterNack');
       })
     }
 
-    function setupSelectAndRemoveQuesters() {
-      _.each($scope.questers, function (selected, playerId) {
-        $scope.$watch(function(){return $scope.questers[playerId];}, function (newValue, oldValue) {
-          if (newValue) {
-            selectQuester(playerId);
-          } else {
-            removeQuester(playerId);
-          }
-        });
-      });
+    $scope.fireSelectOrRemoveQuester = function (playerId) {
+      if ($scope.questers[playerId]) {
+        selectQuester(playerId);
+      } else {
+        removeQuester(playerId);
+      }
     }
 
 
-    if (player.state.id === game.state.playerOrder[game.state.kingIndex]) {
-      setupSelectAndRemoveQuesters();
-    } else {
+    if (player.state.id !== game.state.playerOrder[game.state.kingIndex]) {
       socket.on('questerSelected', function (msg) {
         $scope.questers[msg.selectedQuesterId] = true;
       });

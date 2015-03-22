@@ -26,7 +26,7 @@
         <ol>
           <li ng-repeat="playerId in game.state.playerOrder">
             <input type="checkbox" ng-disabled="player.state.id !== game.state.playerOrder[game.state.kingIndex]"
-                   ng-model="questers[playerId]" name="{{playerId}}"/>
+                   ng-model="questers[playerId]" name="{{playerId}}" ng-change="fireSelectOrRemoveQuester(playerId)"/>
             {{playerId}}
             <i ng-if="player.state.view.indexOf(playerId) !== -1" class="glyphicon glyphicon-thumbs-up"></i>
           </li>
