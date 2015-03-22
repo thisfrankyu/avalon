@@ -9,9 +9,13 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-12">
+      <h1 class="page-header">Register Player</h1>
+      Enter your name: <input type="text" ng-model="playerId">
+    </div>
+    <div class="col-lg-12">
       <h1 class="page-header">Join Game:</h1>
-      <input type="text" ng-model="gameId">
-      <button class="btn btn-success" ng-click="joinGame(gameId)">Submit</button>
+      <input type="text" ng-model="gameId" placeholder="game id">
+      <button class="btn btn-success" ng-click="registerJoinGame(playerId, gameId)">Submit</button>
     </div>
   </div>
 </div>

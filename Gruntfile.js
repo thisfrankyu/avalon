@@ -94,10 +94,10 @@ module.exports = function (grunt) {
           '<%= yeoman.client %>/assets/images/{,*//*}*.{png,jpg,jpeg,gif,webp,svg}'
         ],
         options: {
-          livereload: {
-              key: grunt.file.read('certs/key.pem'),
-              cert: grunt.file.read('certs/cert.pem')
-          }
+          livereload: false //{
+          //     key: grunt.file.read('certs/key.pem'),
+          //     cert: grunt.file.read('certs/cert.pem')
+          // }
         }
       },
       express: {
@@ -106,10 +106,10 @@ module.exports = function (grunt) {
         ],
         tasks: ['express:dev', 'wait'],
         options: {
-          livereload: {
-              key: grunt.file.read('certs/key.pem'),
-              cert: grunt.file.read('certs/cert.pem')
-          },
+          livereload: false, //{
+          //     key: grunt.file.read('certs/key.pem'),
+          //     cert: grunt.file.read('certs/cert.pem')
+          // },
           nospawn: true //Without this option specified express won't be reloaded
         }
       }

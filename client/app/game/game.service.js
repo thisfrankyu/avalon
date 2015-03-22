@@ -2,6 +2,7 @@
 
 
 function GameState() {
+  this.id = null;
   this.ownerId = null;
   this.players = [];
   this.thumbView = [];
@@ -10,6 +11,7 @@ function GameState() {
   this.questIndex = 0;
   this.badSpecialRoles = [];
   this.goodSpecialRoles = [];
+  this.playerOrder = [];
 };
 
 GameState.prototype.currentKing = function () {

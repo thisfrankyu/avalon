@@ -1,0 +1,21 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<header class="hero-unit" id="banner">
+  <div class="container">
+    <h1>Game</h1>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+    <div class="col-lg-6">
+      <h1 class="page-header">Quests</h1>
+      <p>{{game.state}}</p>
+      <ul ng-repeat="quest in game.state.quests">
+        <li>{{quest}}</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div ng-include="'components/footer/footer.html'"></div>

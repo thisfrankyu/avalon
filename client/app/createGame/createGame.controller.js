@@ -2,6 +2,8 @@
 
 angular.module('avalonApp')
   .controller('CreateGameCtrl', function ($scope, $location, socket, game, player) {
+    $scope.playerId = '';
+    $scope.gameId = '';
     $scope.roles = {
       goodRoles: ['Merlin', 'Percival'],
       badRoles: ['Morgana', 'Mordred', 'Assassin', 'Oberon'],
@@ -19,7 +21,7 @@ angular.module('avalonApp')
       }
     };
 
-    $scope.submitRoles = function(selected) {
+    function createGame(playerId, gameId, selected) {
       var selectedGoodRoles = _.filter(_.keys(selected.goodRoles), function (key) {
         return selected.goodRoles[key];
       });
@@ -27,7 +29,7 @@ angular.module('avalonApp')
         return selected.badRoles[key];
       });
       socket.emit('createGame',{
-        gameId: 'game0',
+        gameId: gameId,
         gameOptions: {
           badSpecialRoles: selectedBadRoles,
           goodSpecialRoles: selectedGoodRoles
@@ -35,11 +37,24 @@ angular.module('avalonApp')
       });
       socket.on('createGameAck', function(msg) {
         console.log(JSON.stringify(msg));
+        player.state.id = playerId;
         game.state.badSpecialRoles = msg.gameOptions.badSpecialRoles;
         game.state.goodSpecialRoles = msg.gameOptions.goodSpecialRoles;
-        game.state.players = [player.id];
-        game.state.ownerId = player.id;
+        game.state.players = [player.state.id];
+        game.state.ownerId = player.state.id;
+        game.state.id = msg.gameId;
         console.log('gameState:', JSON.stringify(game.state));
+        $location.path('/lobby');
+      });
+    }
+
+    $scope.registerCreateGame = function(playerId, gameId, selected) {
+      socket.emit('registerPlayer', {
+        playerId: playerId
+      });
+      socket.on('registerPlayerAck', function(msg) {
+        //alert(JSON.stringify(msg));
+        createGame(playerId, gameId, selected);
       });
     };
   });

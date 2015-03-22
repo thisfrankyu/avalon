@@ -1,14 +1,32 @@
 angular.module('avalonApp')
-  .controller('JoinGameCtrl', function ($scope, socket) {
-    $scope.gameId = 'enter gameId';
-    $scope.joinGame = function(gameId) {
+  .controller('JoinGameCtrl', function ($scope, $location, socket, game, player) {
+    $scope.gameId = '';
+
+    function joinGame(playerId, gameId) {
       socket.emit('joinGame',{
         gameId: gameId
       });
       socket.on('joinGameAck', function(msg) {
-        alert(JSON.stringify(msg));
+        //alert(JSON.stringify(msg));
+        player.state.id = playerId;
+        game.state.badSpecialRoles = msg.badSpecialRoles;
+        game.state.goodSpecialRoles = msg.goodSpecialRoles;
+        game.state.players = _.pluck(msg.players, 'id');
+        game.state.ownerId = msg.ownerId;
+        game.state.id = msg.gameId;
+        console.log('gameState:', JSON.stringify(game.state));
+        $location.path('/lobby');
       });
+    }
 
+    $scope.registerJoinGame = function(playerId, gameId) {
+      socket.emit('registerPlayer', {
+        playerId: playerId
+      });
+      socket.on('registerPlayerAck', function(msg) {
+        //alert(JSON.stringify(msg));
+        joinGame(playerId, gameId);
+      });
     };
   })
 .config(function ($stateProvider) {

@@ -9,21 +9,27 @@
 <div class="container">
   <div class="row">
     <div class="col-lg-12">
-      <h1 class="page-header">Good Roles:</h1>
+      <h1 class="page-header">Register Player</h1>
+      Enter your name: <input type="text" ng-model="playerId">
+    </div>
+    <div class="col-lg-6">
+      <h1 class="page-header">Arthur's Loyal Followers:</h1>
       <ul ng-repeat="role in roles.goodRoles">
         <li><input type="checkbox" ng-model="roles.selected.goodRoles[role.toUpperCase()]" name="{{role}}" value="{{role.toUpperCase()}}" /> {{role}}</li>
       </ul>
-      <ul ng-repeat="(role,selected) in roles.selected.goodRoles">
-        <li>{{role}}: {{selected}}</li>
-      </ul>
-      <h1 class="page-header">Bad Roles:</h1>
+    </div>
+    <div class="col-lg-6">
+      <h1 class="page-header">Minions of Mordred:</h1>
       <ul ng-repeat="role in roles.badRoles">
         <li><input type="checkbox" ng-model="roles.selected.badRoles[role.toUpperCase()]" name="{{role}}" value="{{role.toUpperCase()}}" /> {{role}}</li>
       </ul>
-      <ul ng-repeat="(role,selected) in roles.selected.badRoles">
-        <li>{{role}}: {{selected}}</li>
-      </ul>
-      <button class="btn btn-success" ng-click="submitRoles(roles.selected)">Submit</button>
+    </div>
+    <div class="col-lg-12">
+      <h1 class="page-header">Game ID</h1>
+      Enter a name for this game: <input type="text" ng-model="gameId">
+    </div>
+    <div class="col-lg-12 submit-button">
+      <button class="btn btn-success" ng-click="registerCreateGame(playerId, gameId, roles.selected)">Submit</button>
     </div>
   </div>
 </div>
