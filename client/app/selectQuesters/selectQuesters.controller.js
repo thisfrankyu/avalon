@@ -59,4 +59,10 @@ angular.module('avalonApp')
       });
     }
 
+    $scope.submitQuesters = function() {
+      socket.emit('submitQuesters', {
+        gameId: game.state.id
+      });
+    }
+
   });

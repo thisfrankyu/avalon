@@ -31,6 +31,8 @@
             <i ng-if="player.state.view.indexOf(playerId) !== -1" class="glyphicon glyphicon-thumbs-up"></i>
           </li>
         </ol>
+        <button ng-if="player.state.id === game.state.playerOrder[game.state.kingIndex]"
+                class="btn btn-success" ng-click="submitQuesters()">Submit Questers</button>
       </div>
     </div>
   </div>
