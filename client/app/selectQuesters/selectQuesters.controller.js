@@ -17,6 +17,9 @@ angular.module('avalonApp')
       socket.once('selectQuesterNack', function () {
         $scope.questers[selectedQuesterId] = false;
       });
+      socket.once('selectQuesterAck', function(){
+        socket.removeAllListeners('selectQuesterNack');
+      })
     }
 
     function removeQuester(selectedQuesterId) {
@@ -27,6 +30,9 @@ angular.module('avalonApp')
       socket.once('removeQuesterNack', function () {
         $scope.questers[selectedQuesterId] = true;
       });
+      socket.once('removeQuesterAck', function(){
+        socket.removeAllListeners('removeQuesterNack');
+      })
     }
 
     function setupSelectAndRemoveQuesters() {
