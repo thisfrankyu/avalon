@@ -308,8 +308,10 @@ test('test start game', function (t) {
         var response = {
             gameId: gameId,
             players: playersMap,
-            badSpecialRoles: badSpecialRoles,
-            goodSpecialRoles: goodSpecialRoles
+            gameOptions: {
+                goodSpecialRoles: goodSpecialRoles,
+                badSpecialRoles: badSpecialRoles
+            }
         };
         msg.callback(null, response);
         testEmitter.emit('gameStarted', response);
@@ -319,8 +321,10 @@ test('test start game', function (t) {
         t.deepEqual(msg, {
                 gameId: gameId,
                 players: players,
-                badSpecialRoles: badSpecialRoles,
-                goodSpecialRoles: goodSpecialRoles,
+                gameOptions: {
+                    goodSpecialRoles: goodSpecialRoles,
+                    badSpecialRoles: badSpecialRoles
+                },
                 sessionId: sessionId
             },
             'make sure game is started with all the right players and roles');

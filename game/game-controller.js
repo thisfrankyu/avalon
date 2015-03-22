@@ -124,8 +124,13 @@ GameController.prototype._handleStartGame = function (msg) {
     var gameStartedMsg = {
         gameId: gameId,
         players: game.players,
-        badSpecialRoles: game.badSpecialRoles,
-        goodSpecialRoles: game.goodSpecialRoles
+        playerOrder: game.playerOrder,
+        kingIndex: game.kingIndex,
+        quests: game.quests,
+        gameOptions: {
+            badSpecialRoles: game.badSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles
+        }
     };
     if (msg.callback) msg.callback(null, gameStartedMsg);
     this.emitter.emit('gameStarted', gameStartedMsg);

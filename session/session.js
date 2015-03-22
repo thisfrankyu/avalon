@@ -128,8 +128,7 @@ SessionController.prototype._startGame = function (sessionSocketId, gameId) {
             session.socket.emit('startGameAck', {
                 gameId: msg.gameId,
                 players: _.keys(msg.players),
-                badSpecialRoles: msg.badSpecialRoles,
-                goodSpecialRoles: msg.goodSpecialRoles,
+                gameOptions: msg.gameOptions,
                 sessionId: sessionSocketId
             });
         }
@@ -356,27 +355,25 @@ SessionController.prototype._registerSession = function (sessionSocket) {
 
 };
 
-SessionController.prototype._gameStarted = function (gameId, players, badSpecialRoles, goodSpecialRoles) {
+SessionController.prototype._gameStarted = function (msg) {
     var self = this;
-    _.each(players, function (player, playerId) {
+    _.each(msg.players, function (player, playerId) {
         var session = self.sessionByPlayerId(playerId),
             gameStartedMsg = {
                 playerId: playerId,
                 role: player.role,
                 view: player.view,
-                badSpecialRoles: badSpecialRoles,
-                goodSpecialRoles: goodSpecialRoles
+                gameOptions: msg.gameOptions,
+                playerOrder: msg.playerOrder,
+                kingIndex: msg.kingIndex,
+                quests: msg.quests
             };
         session.socket.emit('gameStarted', gameStartedMsg);
     });
 };
 
 SessionController.prototype._handleGameStarted = function (msg) {
-    var gameId = msg.gameId,
-        players = msg.players,
-        badSpecialRoles = msg.badSpecialRoles,
-        goodSpecialRoles = msg.goodSpecialRoles;
-    this.exec(this._gameStarted.bind(this, gameId, players, badSpecialRoles, goodSpecialRoles));
+    this.exec(this._gameStarted.bind(this, msg));
 };
 
 SessionController.prototype._handleVotedOnQuesters = function (msg) {
