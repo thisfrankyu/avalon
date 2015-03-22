@@ -23,8 +23,8 @@
         <li>Number of fails needed: {{quest.numToFail}}</li>
       </ul>
       <div ng-controller="SelectQuestersCtrl">
-        <ol ng-repeat="playerId in game.state.playerOrder">
-          <li>
+        <ol>
+          <li ng-repeat="playerId in game.state.playerOrder">
             <input type="checkbox" ng-disabled="player.state.id !== game.state.playerOrder[game.state.kingIndex]"
                    ng-model="questers[playerId]" name="{{playerId}}"/>
             {{playerId}}
