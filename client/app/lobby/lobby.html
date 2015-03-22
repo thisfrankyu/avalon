@@ -8,21 +8,26 @@
 
 <div class="container">
   <div class="row">
-    <div class="col-lg-12">
+    <div class="col-lg-6">
       <h1 class="page-header">Game ID</h1>
       <p>{{ game.state.id }}</p>
-
+    </div>
+    <div class="col-lg-6">
       <h1 class="page-header">Owner ID</h1>
       <p>{{ game.state.ownerId }}</p>
-
-      <h1 class="page-header">players</h1>
-      <ul ng-repeat="playerId in game.state.players">
-        <li>{{ playerId }}</li>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-6">
+      <h1 class="page-header">Players</h1>
+      <ul class="list-group">
+        <li class="list-group-item" ng-repeat="playerId in game.state.players">{{ playerId }}</li>
       </ul>
-
-      <div class="col-lg-12 submit-button" ng-show="player.state.id == game.state.ownerId">
-        <button class="btn btn-success" ng-click="startGame()">Start Game</button>
-      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-lg-12 submit-button" ng-show="player.state.id == game.state.ownerId">
+      <button class="btn btn-success" ng-click="startGame()">Start Game</button>
     </div>
   </div>
 </div>
