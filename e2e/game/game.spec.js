@@ -5,6 +5,7 @@ describe('stuff View', function () {
     _ = require('underscore'),
     CreateGamePage = require('./createGame.po'),
     JoinGamePage = require('./joinGame.po'),
+    LobbyPage = require('./lobby.po'),
     joinGameBrowsers = [],
     ownerId = 'player0',
     gameId = 'game0';
@@ -23,6 +24,8 @@ describe('stuff View', function () {
       joinGamePage.gameIdInput.sendKeys(gameId);
       joinGamePage.submitButton.click();
     });
+    page = new LobbyPage(browser);
+    page.startGameButton.click();
   });
 
   it('should do stuff', function () {
