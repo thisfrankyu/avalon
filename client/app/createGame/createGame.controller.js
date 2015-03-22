@@ -6,16 +6,16 @@ angular.module('avalonApp')
     $scope.gameId = '';
     $scope.roles = {
       goodRoles: ['Merlin', 'Percival'],
-      badRoles: ['Morgana', 'Mordred', 'Assassin', 'Oberon'],
+      badRoles: ['Assassin', 'Mordred', 'Morgana', 'Oberon'],
       selected: {
         goodRoles: {
           MERLIN: true,
           PERCIVAL: false
         },
         badRoles: {
-          MORGANA: false,
-          MORDRED: false,
           ASSASSIN: true,
+          MORDRED: false,
+          MORGANA: false,
           OBERON: false
         }
       }
