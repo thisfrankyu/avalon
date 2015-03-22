@@ -5,9 +5,9 @@ angular.module('avalonApp')
   .controller('SelectQuestersCtrl', function ($scope, socket, $location, player, game) {
 
     function selectQuester(selectedQuesterId) {
-      $scope.selectedQuesterId = selectedQuesterId;
       socket.emit('selectQuester', {
-        playerId: $scope.playerId
+        gameId: game.state.id,
+        playerId: selectedQuesterId
       });
       socket.once('selectQuesterNack', function () {
         $scope.questers[selectedQuesterId] = false;
@@ -15,9 +15,9 @@ angular.module('avalonApp')
     }
 
     function removeQuester(selectedQuesterId) {
-      $scope.selectedQuesterId = selectedQuesterId;
       socket.emit('removeQuester', {
-        playerId: $scope.playerId
+        gameId: game.state.id,
+        playerId: selectedQuesterId
       });
       socket.once('removeQuesterNack', function () {
         $scope.questers[selectedQuesterId] = true;
@@ -42,7 +42,7 @@ angular.module('avalonApp')
       return memo;
     }, {});
 
-    if (player.id === game.state.playerOrder[game.state.kingIndex]) {
+    if (player.state.id === game.state.playerOrder[game.state.kingIndex]) {
       setupSelectAndRemoveQuesters();
     } else {
       socket.on('questerSelected', function (msg) {

@@ -10,10 +10,28 @@
   <div class="row">
     <div class="col-lg-6">
       <h1 class="page-header">Quests</h1>
+
       <p>{{game.state}}</p>
+
+      <p>{{player.state}}</p>
       <ul ng-repeat="quest in game.state.quests">
-        <li>{{quest}}</li>
+        <li ng-switch="quest.result">
+          <i ng-switch-when="0" class="glyphicon glyphicon-question-sign"></i>
+          <i ng-switch-when="-1" class="glyphicon glyphicon-remove-sign"></i>
+          <i ng-switch-when="1" class="glyphicon glyphicon-ok-sign"></i>
+        </li>
+        <li>Number of fails needed: {{quest.numToFail}}</li>
       </ul>
+      <div ng-controller="SelectQuestersCtrl">
+        <ol ng-repeat="playerId in game.state.playerOrder">
+          <li>
+            <input type="checkbox" ng-disabled="player.state.id !== game.state.playerOrder[game.state.kingIndex]"
+                   ng-model="questers[playerId]" name="{{playerId}}"/>
+            {{playerId}}
+            <i ng-if="player.state.view.indexOf(playerId) !== -1" class="glyphicon glyphicon-thumbs-up"></i>
+          </li>
+        </ol>
+      </div>
     </div>
   </div>
 </div>
