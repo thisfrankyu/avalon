@@ -4,6 +4,11 @@
 angular.module('avalonApp')
   .controller('SelectQuestersCtrl', function ($scope, socket, $location, player, game) {
 
+    $scope.questers = _.reduce(game.state.playerOrder, function (memo, playerId) {
+      memo[playerId] = false;
+      return memo;
+    }, {});
+
     function selectQuester(selectedQuesterId) {
       socket.emit('selectQuester', {
         gameId: game.state.id,
@@ -26,7 +31,7 @@ angular.module('avalonApp')
 
     function setupSelectAndRemoveQuesters() {
       _.each($scope.questers, function (selected, playerId) {
-        $scope.$watch('questers[' + playerId + ']', function (newValue) {
+        $scope.$watch(function(){return $scope.questers[playerId];}, function (newValue, oldValue) {
           if (newValue) {
             selectQuester(playerId);
           } else {
@@ -36,11 +41,6 @@ angular.module('avalonApp')
       });
     }
 
-
-    $scope.questers = _.reduce(game.state.playerOrder, function (memo, playerId) {
-      memo[playerId] = false;
-      return memo;
-    }, {});
 
     if (player.state.id === game.state.playerOrder[game.state.kingIndex]) {
       setupSelectAndRemoveQuesters();
