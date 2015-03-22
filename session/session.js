@@ -100,8 +100,7 @@ SessionController.prototype._joinGame = function (sessionSocketId, gameId) {
             }
             session.socket.emit('joinGameAck', {
                 gameId: msg.gameId,
-                badSpecialRoles: msg.badSpecialRoles,
-                goodSpecialRoles: msg.goodSpecialRoles,
+                gameOptions: msg.gameOptions,
                 ownerId: msg.ownerId,
                 joinedPlayerId: msg.joinedPlayerId,
                 players: msg.players,

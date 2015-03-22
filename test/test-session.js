@@ -187,8 +187,10 @@ test('test join game', function (t) {
             ownerId: ownerId,
             joinedPlayerId: msg.playerId,
             players: players,
-            badSpecialRoles: badSpecialRoles,
-            goodSpecialRoles: goodSpecialRoles
+            gameOptions: {
+                badSpecialRoles: badSpecialRoles,
+                goodSpecialRoles: goodSpecialRoles
+            }
         };
         msg.callback(null, response);
         testEmitter.emit('gameJoined', response);
@@ -200,8 +202,10 @@ test('test join game', function (t) {
             ownerId: ownerId,
             joinedPlayerId: player1,
             players: [playerId, player1],
-            badSpecialRoles: badSpecialRoles,
-            goodSpecialRoles: goodSpecialRoles,
+            gameOptions: {
+                badSpecialRoles: badSpecialRoles,
+                goodSpecialRoles: goodSpecialRoles
+            },
             sessionId: sessionId1
         }, 'make sure ' + player1 + ' joins the game correctly');
     });

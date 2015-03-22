@@ -93,8 +93,10 @@ GameController.prototype._handleJoinGame = function (msg) {
         ownerId: game.ownerId,
         joinedPlayerId: msg.playerId,
         players: game.players,
-        badSpecialRoles: game.badSpecialRoles,
-        goodSpecialRoles: game.goodSpecialRoles
+        gameOptions: {
+            badSpecialRoles: game.badSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles
+        }
     };
     if (msg.callback) msg.callback(null, gameJoinedMsg);
     this.emitter.emit('gameJoined', gameJoinedMsg);
