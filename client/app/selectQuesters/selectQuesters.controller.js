@@ -41,7 +41,7 @@ angular.module('avalonApp')
       } else {
         removeQuester(playerId);
       }
-    }
+    };
 
 
     if (player.state.id !== game.state.playerOrder[game.state.kingIndex]) {
