@@ -48,6 +48,10 @@ angular.module('avalonApp')
         console.log('gameState:', JSON.stringify(game.state));
         $location.path('/lobby');
       });
+      socket.once('createGameNack', function(msg) {
+        console.log(msg);
+        Alert.add($scope, 'danger', msg);
+      });
     }
 
     $scope.registerCreateGame = function(playerId, gameId, selected) {
