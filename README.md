@@ -7,7 +7,7 @@
 
 * Bower (`npm install -g bower`)
 
-* Yeoman (`npm install -g yo`) (for development only)
+* Yeoman (`npm install -g yo generator-angular-fullstack`) (for development only)
 
 ## Installation
 * Run `git clone https://github.com/frankisblissful/avalon.git`
