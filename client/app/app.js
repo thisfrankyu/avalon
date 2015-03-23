@@ -10,7 +10,7 @@ angular.module('avalonApp', [
 ])
   .config(function ($stateProvider, $urlRouterProvider, $locationProvider) {
     $urlRouterProvider
-      .otherwise('/createGame');
+      .otherwise('/');
 
     $locationProvider.html5Mode(true);
   });
