@@ -1,7 +1,9 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('CreateGameCtrl', function ($scope, $location, socket, game, player) {
+  .controller('CreateGameCtrl', function ($scope, $location, socket, game, player, Alert) {
+    $scope.alerts = [];
+
     $scope.playerId = '';
     $scope.gameId = '';
     $scope.roles = {
@@ -35,7 +37,7 @@ angular.module('avalonApp')
           goodSpecialRoles: selectedGoodRoles
         }
       });
-      socket.on('createGameAck', function(msg) {
+      socket.once('createGameAck', function(msg) {
         console.log(JSON.stringify(msg));
         player.state.id = playerId;
         game.state.badSpecialRoles = msg.gameOptions.badSpecialRoles;
@@ -52,9 +54,13 @@ angular.module('avalonApp')
       socket.emit('registerPlayer', {
         playerId: playerId
       });
-      socket.on('registerPlayerAck', function(msg) {
+      socket.once('registerPlayerAck', function(msg) {
         //alert(JSON.stringify(msg));
         createGame(playerId, gameId, selected);
+      });
+      socket.once('registerPlayerNack', function(msg) {
+        console.log(msg);
+        Alert.add($scope, 'danger', msg);
       });
     };
   });
