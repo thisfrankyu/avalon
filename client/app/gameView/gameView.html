@@ -34,13 +34,13 @@
   <div class="row">
     <div class="col-lg-3"></div>
     <div class="col-lg-1">
-      <ul class="list-group">
+      <ul id="playerThumbs" class="list-group">
         <li class="list-group-item text-center" ng-repeat="playerId in game.state.playerOrder">
           <i ng-if="player.state.view.indexOf(playerId) !== -1" class="fa fa-thumbs-o-up"></i>&nbsp;
         </li>
       </ul>
     </div>
-    <div class="col-lg-4">
+    <div id="playerList" class="col-lg-4">
       <ul class="list-group">
         <li class="list-group-item" ng-repeat="playerId in game.state.playerOrder">
           {{playerId}}
