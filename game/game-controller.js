@@ -15,7 +15,6 @@ var QUEST_STATE = require('./quest').QUEST_STATE;
 
 function GameController(emitter) {
     this.emitter = emitter;
-    this.sessions = {}; //sessionId --> session
     this.players = {}; //playerId --> player
     this.games = {}; //gameId --> game
 }
@@ -70,7 +69,7 @@ GameController.prototype._handleCreateGame = function (msg) {
         ownerId: game.ownerId,
         gameOptions: {
             badSpecialRoles: game.badSpecialRoles,
-            goodSpecialRoles: game.goodSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles
         },
         gameFromController: this.games[game.id]
     };

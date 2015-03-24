@@ -11,13 +11,11 @@ angular.module('avalonApp')
     });
 
     socket.on('gameStarted', function(msg) {
-      console.log('***** msg', msg)
       game.state.playerOrder = msg.playerOrder;
       game.state.quests = msg.quests;
       player.state.view = msg.view;
       player.state.role = msg.role;
-      console.log('**** game', game)
-      console.log('**** player', player)
+      game.state.stage = game.STAGES.SELECT_QUESTERS;
       $location.path('/game');
     });
 

@@ -6,7 +6,8 @@ describe('stuff View', function () {
     CreateGamePage = require('./createGame.po'),
     JoinGamePage = require('./joinGame.po'),
     LobbyPage = require('./lobby.po'),
-    joinGameBrowsers = [],
+    GameViewPage = require('./gameView.po'),
+    browsers = [browser],
     ownerId = 'player0',
     gameId = 'game0';
   beforeEach(function () {
@@ -19,13 +20,23 @@ describe('stuff View', function () {
       var joinGameBrowser = browser.forkNewDriverInstance(true),
         joinGamePage = new JoinGamePage(joinGameBrowser);
       joinGameBrowser.get('/joinGame');
-      joinGameBrowsers.push[joinGameBrowser];
+      browsers.push(joinGameBrowser);
       joinGamePage.playerIdInput.sendKeys('player'+(i+1));
       joinGamePage.gameIdInput.sendKeys(gameId);
       joinGamePage.submitButton.click();
     });
     page = new LobbyPage(browser);
     page.startGameButton.click();
+    _.each(browsers, function (aBrowser) {
+      var gameViewPage = new GameViewPage(aBrowser);
+      gameViewPage.submitQuestersButton.isPresent().then(function(isPresent) {
+        if(isPresent) {
+          gameViewPage.player0SelectQuesterCheckBox.click();
+          gameViewPage.player1SelectQuesterCheckBox.click();
+          gameViewPage.submitQuestersButton.click();
+        }
+      })
+    });
   });
 
   it('should do stuff', function () {

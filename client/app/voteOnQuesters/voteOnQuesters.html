@@ -1,3 +1,7 @@
-<div class="col-md-12">
-This is the voteOnQuesters view.
+<div ng-controller="VoteOnQuestersCtrl">
+  <ul id="voteOnQuestersCheckboxes" class="list-group">
+    <li class="list-group-item text-center" ng-repeat="playerId in game.state.playerOrder">
+      <checkbox ng-disabled="true" ng-model="voted[playerId]" name="{{playerId}}"></checkbox>
+    </li>
+  </ul>
 </div>

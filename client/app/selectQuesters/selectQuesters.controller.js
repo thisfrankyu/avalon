@@ -2,7 +2,7 @@
 
 
 angular.module('avalonApp')
-  .controller('SelectQuestersCtrl', function ($scope, socket, $location, game, player) {
+  .controller('SelectQuestersCtrl', function ($rootScope, $scope, socket, $location, game, player) {
     $scope.game = game;
     $scope.player = player;
 
@@ -10,6 +10,12 @@ angular.module('avalonApp')
       memo[playerId] = false;
       return memo;
     }, {});
+
+    socket.on('questersSubmitted', function(msg) {
+      game.state.currentQuest().selectedQuesters = msg.selectedQuesters;
+      game.state.stage = game.STAGES.VOTE_ON_QUESTERS;
+      $rootScope.$broadcast('voteOnQuesters');
+    });
 
     function selectQuester(selectedQuesterId) {
       socket.emit('selectQuester', {

@@ -12,6 +12,18 @@ function GameState() {
   this.badSpecialRoles = [];
   this.goodSpecialRoles = [];
   this.playerOrder = [];
+  this.stage = STAGES.NOT_STARTED;
+}
+
+var STAGES = {
+  NOT_STARTED: 'NOT_STARTED',
+  SELECT_QUESTERS: 'SELECT_QUESTERS',
+  VOTE_ON_QUESTERS: 'VOTE_ON_QUESTERS',
+  QUEST: 'QUEST',
+  KILL_MERLIN: 'KILL_MERLIN',
+  GOOD_WINS: 'GOOD_WINS',
+  BAD_WINS: 'BAD_WINS',
+  DONE: 'DONE'
 };
 
 GameState.prototype.currentKing = function () {
@@ -35,6 +47,7 @@ angular.module('avalonApp')
 
     return {
       state: state,
-      VOTE: VOTE
+      VOTE: VOTE,
+      STAGES: STAGES
     };
   });
