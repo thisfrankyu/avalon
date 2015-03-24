@@ -2,7 +2,9 @@
 
 
 angular.module('avalonApp')
-  .controller('SelectQuestersCtrl', function ($scope, socket, $location, player, game) {
+  .controller('SelectQuestersCtrl', function ($scope, socket, $location, game, player) {
+    $scope.game = game;
+    $scope.player = player;
 
     $scope.questers = _.reduce(game.state.playerOrder, function (memo, playerId) {
       memo[playerId] = false;

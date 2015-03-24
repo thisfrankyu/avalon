@@ -1,0 +1,9 @@
+ul#questView {
+
+}
+
+ul#questView li.questContainer {
+  list-style: none;
+  display: inline-block;
+  padding: 0px 20px;
+}
