@@ -22,6 +22,7 @@ module.exports = function(config) {
       'client/bower_components/angular-ui-router/release/angular-ui-router.js',
       'client/bower_components/angular-socket-io/socket.js',
       'client/bower_components/socket.io-client/socket.io.js',
+      'client/bower_components/angular-bootstrap-checkbox/angular-bootstrap-checkbox.js',
       'client/app/app.js',
       'client/app/**/*.js',
       'client/components/**/*.js',
