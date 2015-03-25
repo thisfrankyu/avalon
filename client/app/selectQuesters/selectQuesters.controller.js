@@ -27,7 +27,7 @@ angular.module('avalonApp')
       });
       socket.once('selectQuesterAck', function () {
         socket.removeAllListeners('selectQuesterNack');
-      })
+      });
     }
 
     function removeQuester(selectedQuesterId) {
@@ -40,7 +40,7 @@ angular.module('avalonApp')
       });
       socket.once('removeQuesterAck', function () {
         socket.removeAllListeners('removeQuesterNack');
-      })
+      });
     }
 
     $scope.fireSelectOrRemoveQuester = function (playerId) {
@@ -65,6 +65,6 @@ angular.module('avalonApp')
       socket.emit('submitQuesters', {
         gameId: game.state.id
       });
-    }
+    };
 
   });

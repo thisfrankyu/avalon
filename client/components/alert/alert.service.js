@@ -4,10 +4,8 @@ angular.module('avalonApp')
   .factory('Alert', function () {
     var Alert;
 
-    Alert
-
     // Public API here
-    return Alert = {
+    Alert = {
       add: function(scope, type, msg) {
         return scope.alerts.push({
           type: type,
@@ -27,4 +25,6 @@ angular.module('avalonApp')
         scope.alerts = [];
       }
     };
+
+    return Alert;
   });

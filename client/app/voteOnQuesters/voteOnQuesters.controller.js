@@ -11,11 +11,13 @@ angular.module('avalonApp')
       $scope.voted[msg.playerId] = true;
     });
     socket.on('questRejected', function (msg) {
+      console.log(msg);
       game.state.currentQuest().numRejections++;
       game.state.kingIndex++;
       game.state.stage = game.STAGES.SELECT_QUESTERS;
     });
     socket.on('questAccepted', function (msg) {
+      console.log(msg);
       //TODO: need to display vote values and who voted accept or reject
       game.state.stage = game.STAGES.QUEST;
     });
