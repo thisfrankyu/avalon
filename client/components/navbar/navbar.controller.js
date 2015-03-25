@@ -12,8 +12,11 @@ angular.module('avalonApp')
       'title': 'Join Game',
       'link': '/joinGame'
     },{
-      'title': 'Register Player',
-      'link': '/registerPlayer'
+      'title': 'Lobby',
+      'link': '/lobby'
+    },{
+      'title': 'Game',
+      'link': '/game'
     }];
 
     $scope.isCollapsed = true;
