@@ -296,10 +296,12 @@ Game.prototype.voteSuccessFail = function (votingPlayerId, vote) {
     if (this.stage !== STAGES.QUEST) {
         throw new Error('Tried to vote on success or fail before quest was started');
     }
-
+    if (vote !== VOTE.SUCCESS && vote !== VOTE.FAIL){
+        throw new Error('invalid vote value');
+    }
     this._validatePlayerOnQuest(votingPlayerId, vote);
     this.currentSuccessFailVotes[votingPlayerId] = vote;
-    var successFailVotes = this.currentSuccessFailVotes,
+    var successFailVotes = _.clone(this.currentSuccessFailVotes),
         voteResult = QUEST_STATE.UNDECIDED,
         questIndex = this.questIndex;
     //TODO: notify clients/controller that votingPlayerId has voted
