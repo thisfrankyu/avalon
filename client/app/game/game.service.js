@@ -1,6 +1,17 @@
 'use strict';
 
 
+var STAGES = {
+  NOT_STARTED: 'NOT_STARTED',
+  SELECT_QUESTERS: 'SELECT_QUESTERS',
+  VOTE_ON_QUESTERS: 'VOTE_ON_QUESTERS',
+  QUEST: 'QUEST',
+  KILL_MERLIN: 'KILL_MERLIN',
+  GOOD_WINS: 'GOOD_WINS',
+  BAD_WINS: 'BAD_WINS',
+  DONE: 'DONE'
+};
+
 function GameState() {
   this.id = null;
   this.ownerId = null;
@@ -14,17 +25,6 @@ function GameState() {
   this.playerOrder = [];
   this.stage = STAGES.NOT_STARTED;
 }
-
-var STAGES = {
-  NOT_STARTED: 'NOT_STARTED',
-  SELECT_QUESTERS: 'SELECT_QUESTERS',
-  VOTE_ON_QUESTERS: 'VOTE_ON_QUESTERS',
-  QUEST: 'QUEST',
-  KILL_MERLIN: 'KILL_MERLIN',
-  GOOD_WINS: 'GOOD_WINS',
-  BAD_WINS: 'BAD_WINS',
-  DONE: 'DONE'
-};
 
 GameState.prototype.currentKing = function () {
   return this.players[this.kingIndex];

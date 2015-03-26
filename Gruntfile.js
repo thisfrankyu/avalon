@@ -322,7 +322,7 @@ module.exports = function (grunt) {
           removeScriptTypeAttributes: true,
           removeStyleLinkTypeAttributes: true
         },
-        usemin: 'static/app.js'
+        usemin: 'app/app.js'
       },
       main: {
         cwd: '<%= yeoman.client %>',
@@ -386,7 +386,7 @@ module.exports = function (grunt) {
         expand: true,
         cwd: '.tmp/concat',
         dest: '<%= yeoman.dist %>/public',
-        src: ['static/**/*']
+        src: ['app/**/*']
       },
       styles: {
         expand: true,

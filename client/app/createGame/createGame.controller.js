@@ -59,7 +59,7 @@ angular.module('avalonApp')
         playerId: playerId
       });
       socket.once('registerPlayerAck', function(msg) {
-        //alert(JSON.stringify(msg));
+        console.log(msg);
         createGame(playerId, gameId, selected);
       });
       socket.once('registerPlayerNack', function(msg) {
