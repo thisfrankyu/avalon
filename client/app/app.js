@@ -6,8 +6,7 @@ angular.module('avalonApp', [
   'ngResource',
   'ngSanitize',
   'ui.router',
-  'ui.bootstrap',
-  'ui.checkbox'
+  'ui.bootstrap'
 ])
   .config(function ($stateProvider, $urlRouterProvider, $locationProvider) {
     $urlRouterProvider

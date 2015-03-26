@@ -8,6 +8,10 @@ angular.module('avalonApp')
         memo[playerId] = false;
         return memo;
       }, {});
+      $scope.votes = _.reduce(game.state.playerOrder, function (memo, playerId) {
+        memo[playerId] = 0;
+        return memo;
+      }, {});
     }
     init();
     socket.on('votedOnQuesters', function (msg) {
@@ -15,6 +19,7 @@ angular.module('avalonApp')
     });
     socket.on('questRejected', function (msg) {
       console.log(msg);
+      $scope.votes = msg.votes;
       game.state.currentQuest().numRejections++;
       game.state.kingIndex++;
       game.state.stage = game.STAGES.SELECT_QUESTERS;
@@ -22,6 +27,7 @@ angular.module('avalonApp')
     });
     socket.on('questAccepted', function (msg) {
       console.log(msg);
+      $scope.votes = msg.votes;
       //TODO: need to display vote values and who voted accept or reject
       game.state.stage = game.STAGES.QUEST;
       $rootScope.$broadcast('stateChanged', game.state.stage);
@@ -32,6 +38,7 @@ angular.module('avalonApp')
         templateUrl: 'app/voteOnQuesters/voteOnQuesters.modal.html',
         controller: 'VoteOnQuestersModalCtrl',
         size: 'sm',
+        backdrop: 'static',
         resolve: {}
       });
     }
