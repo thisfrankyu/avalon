@@ -9,7 +9,6 @@ angular.module('avalonApp')
       game.state.questIndex++;
       game.state.kingIndex++;
       game.state.stage = msg.stage;
-      console.log('voteOnSuccessFailController got questEnded, stage:', msg.stage);
       $rootScope.$broadcast('stateChanged', game.state.stage);
     });
 

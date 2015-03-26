@@ -392,7 +392,7 @@ SessionController.prototype._handleQuestEnded = function (msg) {
     var response = {
         gameId: msg.gameId,
         votes: _.values(msg.votes),
-        questResult: msg.voteResult,
+        questResult: msg.questResult,
         questIndex: msg.questIndex,
         nextQuest: msg.nextQuest,
         stage: msg.stage
