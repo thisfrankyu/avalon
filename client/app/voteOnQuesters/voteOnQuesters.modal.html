@@ -2,8 +2,8 @@
   <h3 class="modal-title">Vote on Selected Questers</h3>
 </div>
 <div class="modal-body">
-  <ul>
-    <li ng-repeat="player in game.state.currentQuest().selectedQuesters">
+  <ul class="list-group">
+    <li class="list-group-item" ng-repeat="player in game.state.currentQuest().selectedQuesters">
       {{player}}
     </li>
   </ul>
