@@ -6,15 +6,19 @@ angular.module('avalonApp')
     $scope.game = game;
     $scope.player = player;
 
-    $scope.questers = _.reduce(game.state.playerOrder, function (memo, playerId) {
-      memo[playerId] = false;
-      return memo;
-    }, {});
+    function init(){
+      $scope.questers = _.reduce(game.state.playerOrder, function (memo, playerId) {
+        memo[playerId] = false;
+        return memo;
+      }, {});
+    }
+
+    init();
 
     socket.on('questersSubmitted', function(msg) {
       game.state.currentQuest().selectedQuesters = msg.selectedQuesters;
       game.state.stage = game.STAGES.VOTE_ON_QUESTERS;
-      $rootScope.$broadcast('voteOnQuesters');
+      $rootScope.$broadcast('stateChanged', game.state.stage);
     });
 
     function selectQuester(selectedQuesterId) {
@@ -66,5 +70,10 @@ angular.module('avalonApp')
         gameId: game.state.id
       });
     }
+
+    $rootScope.$on('stateChanged', function (scope, msg) {
+      if(msg !== game.STAGES.SELECT_QUESTERS) return;
+      init();
+    });
 
   });
