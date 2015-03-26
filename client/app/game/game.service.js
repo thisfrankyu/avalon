@@ -50,16 +50,16 @@ angular.module('avalonApp')
       VOTE: VOTE,
       STAGES: STAGES,
       GOOD_ROLES: {
-        "VILLAGE_IDIOT": "VILLAGE_IDIOT",
-        "MERLIN": "MERLIN",
-        "PERCIVAL": "PERCIVAL"
+        'VILLAGE_IDIOT': 'VILLAGE_IDIOT',
+        'MERLIN': 'MERLIN',
+        'PERCIVAL': 'PERCIVAL'
       },
       BAD_ROLES: {
-        "REGULAR_MINION": "REGULAR_MINION",
-        "ASSASSIN": "ASSASSIN",
-        "MORGANA": "MORGANA",
-        "MORDRED": "MORDRED",
-        "OBERON": "OBERON"
+        'REGULAR_MINION': 'REGULAR_MINION',
+        'ASSASSIN': 'ASSASSIN',
+        'MORGANA': 'MORGANA',
+        'MORDRED': 'MORDRED',
+        'OBERON': 'OBERON'
       }
     };
   });

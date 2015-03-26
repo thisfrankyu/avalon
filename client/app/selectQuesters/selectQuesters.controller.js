@@ -72,7 +72,7 @@ angular.module('avalonApp')
     };
 
     $rootScope.$on('stateChanged', function (scope, msg) {
-      if(msg !== game.STAGES.SELECT_QUESTERS) return;
+      if(msg !== game.STAGES.SELECT_QUESTERS) { return; }
       init();
     });
 

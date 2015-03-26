@@ -23,6 +23,6 @@ angular.module('avalonApp')
     };
 
     $rootScope.$on('stateChanged', function (scope, msg) {
-      if (msg !== game.STAGES.QUEST) $modalInstance.close();
+      if (msg !== game.STAGES.QUEST) { $modalInstance.close(); }
     });
   });
