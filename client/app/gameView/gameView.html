@@ -19,8 +19,8 @@
       <ul id="questView">
         <li ng-repeat="quest in game.state.quests" class="questContainer" ng-switch="quest.result">
           <i ng-switch-when="0" class="fa fa-4x fa-question-circle"></i>
-          <i ng-switch-when="-1" class="fa fa-4x fa-times-circle"></i>
-          <i ng-switch-when="1" class="fa fa-4x fa-check-circle"></i>
+          <i ng-switch-when="-1" class="fa fa-4x fa-times-circle text-danger"></i>
+          <i ng-switch-when="1" class="fa fa-4x fa-check-circle text-success"></i>
         </li>
         <!--<li>Number of fails needed: {{quest.numToFail}}</li>-->
       </ul>
