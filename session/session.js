@@ -394,7 +394,8 @@ SessionController.prototype._handleQuestEnded = function (msg) {
         votes: _.values(msg.votes),
         questResult: msg.voteResult,
         questIndex: msg.questIndex,
-        nextQuest: msg.nextQuest
+        nextQuest: msg.nextQuest,
+        stage: msg.stage
     };
     this.io.emit('questEnded', response);
 };

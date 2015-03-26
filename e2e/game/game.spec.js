@@ -16,7 +16,7 @@ describe('stuff View', function () {
     page.playerIdInput.sendKeys(ownerId);
     page.gameIdInput.sendKeys(gameId);
     page.submitButton.click();
-    _.times(5, function (i) {
+    _.times(4, function (i) {
       var joinGameBrowser = browser.forkNewDriverInstance(true),
         joinGamePage = new JoinGamePage(joinGameBrowser);
       joinGameBrowser.get('/joinGame');
