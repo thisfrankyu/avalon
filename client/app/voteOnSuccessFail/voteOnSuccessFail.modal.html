@@ -2,19 +2,21 @@
   <h3 class="modal-title">Vote on Success/Fail</h3>
 </div>
 <div class="modal-body">
-  <div class="col-xs-4 col-lg-4">
-    <ul id="playerList" class="list-group">
-      <li class="list-group-item" ng-repeat="playerId in game.state.currentQuest().selectedQuesters">
-        {{playerId}}
-      </li>
-    </ul>
-  </div>
-  <div class="col-xs-1 col-lg-1">
-    <ul id="voteOnSuccessFailCheckboxes" class="list-group">
-      <li class="list-group-item text-center" ng-repeat="playerId in game.state.currentQuest().selectedQuesters">
-        <checkbox ng-disabled="true" ng-model="voted[playerId]" name="{{playerId}}Voted"></checkbox>
-      </li>
-    </ul>
+  <div class="container-fluid">
+    <div class="col-xs-7">
+      <ul id="playerList" class="list-group">
+        <li class="list-group-item" ng-repeat="playerId in game.state.currentQuest().selectedQuesters">
+          {{playerId}}
+        </li>
+      </ul>
+    </div>
+    <div class="col-xs-5">
+      <ul id="voteOnSuccessFailCheckboxes" class="list-group">
+        <li class="list-group-item text-center" ng-repeat="playerId in game.state.currentQuest().selectedQuesters">
+          <checkbox ng-disabled="true" ng-model="voted[playerId]" name="{{playerId}}Voted"></checkbox>
+        </li>
+      </ul>
+    </div>
   </div>
 </div>
 <div class="modal-footer">
