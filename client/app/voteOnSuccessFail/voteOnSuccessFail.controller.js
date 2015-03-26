@@ -16,14 +16,13 @@ angular.module('avalonApp')
       $modal.open({
         templateUrl: 'app/voteOnSuccessFail/voteOnSuccessFail.modal.html',
         controller: 'VoteOnSuccessFailModalCtrl',
-        size: 'sm',
         backdrop: 'static',
         resolve: {}
       });
     }
 
     $rootScope.$on('stateChanged', function (scope, msg) {
-      if (msg !== game.STAGES.QUEST) return;
+      if (msg !== game.STAGES.QUEST) { return; }
       openVoteModal();
     });
 

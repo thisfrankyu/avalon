@@ -3,14 +3,14 @@
 </div>
 <div class="modal-body">
   <div class="container-fluid">
-    <div class="col-xs-7">
+    <div class="col-xs-10">
       <ul id="playerList" class="list-group">
         <li class="list-group-item" ng-repeat="playerId in game.state.currentQuest().selectedQuesters">
           {{playerId}}
         </li>
       </ul>
     </div>
-    <div class="col-xs-5">
+    <div class="col-xs-2">
       <ul id="voteOnSuccessFailCheckboxes" class="list-group">
         <li class="list-group-item text-center" ng-repeat="playerId in game.state.currentQuest().selectedQuesters">
           <checkbox ng-disabled="true" ng-model="voted[playerId]" name="{{playerId}}Voted"></checkbox>
