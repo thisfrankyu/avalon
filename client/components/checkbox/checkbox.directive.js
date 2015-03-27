@@ -12,26 +12,21 @@ angular.module('avalonApp').directive('checkbox', function() {
     '<span ng-style="styleicon" class="glyphicon" ng-class="{\'glyphicon-ok\': checked===true}"></span>' +
     '</button>',
     link: function(scope, elem, attrs, modelCtrl) {
-      scope.size = 'default';
       // Default Button Styling
       scope.stylebtn = {};
       // Default Checkmark Styling
       scope.styleicon = {'width': '10px', 'left': '-1px'};
       // If size is undefined, Checkbox has normal size (Bootstrap 'xs')
       if(attrs.large !== undefined) {
-        scope.size = 'large';
         elem.addClass('btn-sm');
         scope.stylebtn = {'padding-top': '2px', 'padding-bottom': '2px', 'height': '30px'};
         scope.styleicon = {'width': '8px', 'left': '-5px', 'font-size': '17px'};
       }
       else if(attrs.larger !== undefined) {
-        scope.size = 'larger';
-        elem.addClass('btn-sm');
         scope.stylebtn = {'padding-top': '2px', 'padding-bottom': '2px', 'height': '34px'};
         scope.styleicon = {'width': '8px', 'left': '-8px', 'font-size': '22px'};
       }
       else if(attrs.largest !== undefined) {
-        scope.size = 'largest';
         elem.addClass('btn-lg');
         scope.stylebtn = {'padding-top': '2px', 'padding-bottom': '2px', 'height': '45px'};
         scope.styleicon = {'width': '11px', 'left': '-11px', 'font-size': '30px'};
