@@ -12,6 +12,7 @@ var Player = require('./player');
 var Game = engine.Game;
 var STAGES = engine.STAGES;
 var QUEST_STATE = require('./quest').QUEST_STATE;
+var RULES = require('./rules');
 
 function GameController(emitter) {
     this.emitter = emitter;
@@ -248,20 +249,28 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
     if (callback) callback(null, votedOnSuccessFailMsg);
     this.emitter.emit('votedOnSuccessFail', votedOnSuccessFailMsg);
     if (result.voteResult !== QUEST_STATE.UNDECIDED) {
-        if (result.stage === STAGES.KILL_MERLIN) {
-            this.emitter.emit('killMerlinStage', {
-                gameId: gameId,
-                stage: result.stage
-            });
-        }
-        this.emitter.emit('questEnded', {
+        var questEndedMsg = {
             gameId: gameId,
             votes: result.votes,
             questResult: result.voteResult,
             questIndex: result.questIndex,
             nextQuest: game.currentQuest(),
             stage: result.stage
-        });
+        };
+        this.emitter.emit('questEnded', questEndedMsg);
+        if (result.stage === STAGES.KILL_MERLIN) {
+            var goodPlayerIds = _.filter(_.keys(game.players), function (playerId) {
+                    return _.has(RULES.GOOD_ROLES, game.players[playerId].role);
+                }),
+                assassinInGame = _.contains(game.badSpecialRoles, RULES.BAD_ROLES.ASSASSIN);
+
+            this.emitter.emit('killMerlinStage', {
+                gameId: gameId,
+                stage: result.stage,
+                goodPlayerIds: goodPlayerIds,
+                assassinInGame: assassinInGame
+            });
+        }
     }
 };
 

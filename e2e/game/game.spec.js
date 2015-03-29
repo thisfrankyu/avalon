@@ -61,6 +61,6 @@ describe('stuff View', function () {
   });
 
   it('should do stuff', function () {
-    browser.sleep(100000);
+    _.each(browsers, function(aBrowser) {aBrowser.sleep(10000000)});
   });
 });
