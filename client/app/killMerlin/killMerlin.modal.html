@@ -5,7 +5,7 @@
   <div class="container-fluid">
     <div class="col-xs-2">
       <label ng-repeat="playerId in goodPlayerIds">
-        <input type="radio" ng-disabled="!canEdit()" name="{{playerId}}" ng-model="targetedPlayerId"
+        <input type="radio" ng-disabled="!canEdit()" name="{{playerId}}" ng-model="$parent.targetedPlayerId"
                ng-change="targetMerlin(playerId)" ng-value="playerId">{{playerId}}</br>
       </label>
     </div>
