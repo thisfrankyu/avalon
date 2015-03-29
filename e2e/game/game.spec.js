@@ -9,7 +9,8 @@ describe('stuff View', function () {
     GameViewPage = require('./gameView.po'),
     browsers = [browser],
     ownerId = 'player0',
-    gameId = 'game0';
+    gameId = 'game0',
+    numQuesters = [2,3,2];
   beforeEach(function () {
     browser.get('/createGame');
     page = new CreateGamePage(browser);
@@ -27,15 +28,35 @@ describe('stuff View', function () {
     });
     page = new LobbyPage(browser);
     page.startGameButton.click();
-    _.each(browsers, function (aBrowser) {
-      var gameViewPage = new GameViewPage(aBrowser);
-      gameViewPage.submitQuestersButton.isPresent().then(function(isPresent) {
-        if(isPresent) {
-          gameViewPage.player0SelectQuesterCheckBox.click();
-          gameViewPage.player1SelectQuesterCheckBox.click();
-          gameViewPage.submitQuestersButton.click();
-        }
-      })
+    _.times(3, function (i) {
+      _.each(browsers, function (aBrowser) {
+        var gameViewPage = new GameViewPage(aBrowser);
+        gameViewPage.submitQuestersButton.isPresent().then(function(isPresent) {
+          if(isPresent) {
+            _.times(numQuesters[i], function (j) {
+              // TODO: move to page object
+              aBrowser.element(by.name('player'+j)).click();
+            });
+            gameViewPage.submitQuestersButton.click();
+          }
+        });
+      });
+      _.each(browsers, function (aBrowser) {
+        var gameViewPage = new GameViewPage(aBrowser);
+        gameViewPage.acceptQuestersButton.click();
+      });
+      _.each(browsers, function (aBrowser) {
+        var gameViewPage = new GameViewPage(aBrowser);
+        gameViewPage.questSuccessButton.isPresent().then(function(isPresent) {
+          if(isPresent) {
+            gameViewPage.questSuccessButton.isEnabled().then(function(isEnabled) {
+              if(isEnabled) {
+                gameViewPage.questSuccessButton.click();
+              }
+            });
+          }
+        });
+      });
     });
   });
 
