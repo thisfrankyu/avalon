@@ -1,14 +1,11 @@
 <div class="modal-header">
   <h3 class="modal-title">Game Over</h3>
 </div>
-<div class="modal-body">
+<div class="modal-body" ng-class="{'bg-success': stage === 'GOOD_WINS', 'bg-danger': stage === 'BAD_WINS'}">
   <div class="container-fluid">
-    <div class="col-xs-2">
-      <label ng-switch="stage">
-        <div ng-switch-when="BAD_WINS">Minions of Mordred win</div>
-        <div ng-switch-when="GOOD_WINS">Followers of Arthur win</div>
-      </label>
+    <div ng-switch="stage" class="text-center">
+      <h1 ng-switch-when="BAD_WINS">Minions of Mordred win!</h1>
+      <h1 ng-switch-when="GOOD_WINS">Followers of Arthur win!</h1>
     </div>
   </div>
-</div>
 </div>
