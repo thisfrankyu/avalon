@@ -17,12 +17,16 @@
   <div class="row">
     <div class="col-xs-12 text-center">
       <ul id="questView">
-        <li ng-repeat="quest in game.state.quests" class="questContainer" ng-switch="quest.result">
-          <i ng-switch-when="0" class="fa fa-4x fa-question-circle"></i>
-          <i ng-switch-when="-1" class="fa fa-4x fa-times-circle text-danger"></i>
-          <i ng-switch-when="1" class="fa fa-4x fa-check-circle text-success"></i>
+        <li ng-repeat="(index,quest) in game.state.quests" class="questContainer">
+          <h1>{{index + 1}}</h1>
+          <div ng-switch="quest.result">
+            <i ng-switch-when="0" class="fa fa-5x fa-question-circle"></i>
+            <i ng-switch-when="-1" class="fa fa-5x fa-times-circle text-danger"></i>
+            <i ng-switch-when="1" class="fa fa-5x fa-check-circle text-success"></i>
+          </div>
+          <div>Players On Quest: {{quest.numPlayers}}</div>
+          <div>Votes to Fail: {{quest.numToFail}}</div>
         </li>
-        <!--<li>Number of fails needed: {{quest.numToFail}}</li>-->
       </ul>
     </div>
   </div>
