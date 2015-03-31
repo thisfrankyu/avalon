@@ -8,7 +8,6 @@ angular.module('avalonApp')
       $modal.open({
         templateUrl: 'app/endGame/endGame.modal.html',
         controller: 'EndGameModalCtrl',
-        backdrop: 'static',
         resolve: {
           stage: function(){
             return stage;
