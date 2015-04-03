@@ -31,7 +31,7 @@ require('./config/express')(app);
 require('./routes')(app);
 
 app.get('/avalon.xml', function(req, res){
-  res.sendFile(__dirname + '/public/avalon.xml');
+  res.sendFile(__dirname + '/client/avalon.xml');
 });
 var emitter = newEmitter();
 var sessionController = new SessionController(emitter, io);
