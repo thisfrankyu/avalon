@@ -44,10 +44,8 @@ angular.module('avalonApp')
     }
 
     $rootScope.$on('stateChanged', function (scope, msg) {
-      if (msg === game.STAGES.SELECT_QUESTERS || msg === game.STAGES.VOTE_ON_QUESTERS) {
-        init();
-      }
       if (msg === game.STAGES.VOTE_ON_QUESTERS) {
+        init();
         openVoteModal();
       }
     });
