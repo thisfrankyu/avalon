@@ -556,6 +556,20 @@ module.exports = function (grunt) {
       ]);
     }
 
+    if (target === 'headless') {
+      return grunt.task.run([
+        'clean:server',
+        'env:all',
+        'concurrent:server',
+        'injector',
+        'wiredep',
+        'autoprefixer',
+        'express:dev',
+        'wait',
+        'watch'
+      ]);
+    }
+
     grunt.task.run([
       'clean:server',
       'env:all',
