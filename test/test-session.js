@@ -11,6 +11,7 @@ var Player = require('../game/player');
 
 function Socket(id) {
     this.id = id;
+    this.connected = true;
 }
 util.inherits(Socket, EventEmitter);
 
@@ -75,6 +76,67 @@ test('test register player', function (t) {
     });
     socket.emit('registerPlayer', {playerId: playerId});
     socket1.emit('registerPlayer', {playerId: playerId});
+});
+
+
+test('test re-register player', function (t) {
+    var sessionId = 'sessionSocket0',
+        playerId = 'player0',
+        testEmitter = newEmitter(),
+        io = new Socket('io'),
+        socket = new Socket(sessionId),
+        socket1 = new Socket('sessionSocket1'),
+        sessionController = new SessionController(testEmitter, io),
+        session;
+
+    t.plan(8);
+    sessionController.init();
+    io.emit('connection', socket);
+    io.emit('connection', socket1);
+    socket.on('registerPlayerAck', function (msg) {
+        if (_.has(msg, 'sessionId')) {
+            session = sessionController.sessions[sessionId];
+            t.equal(session.playerId, playerId,
+                'make sure that ' + playerId + ' was successfully registered in session controller');
+        }
+    });
+    testEmitter.once('registerPlayer', function (msg) {
+        var response = {playerId: msg.playerId};
+        msg.callback(null, response);
+        testEmitter.emit('playerRegistered', response);
+    });
+    socket.emit('registerPlayer', {playerId: playerId});
+    testEmitter.once('error', function (err) {
+        t.equal(err.message, 'playerId player0 already has an active session',
+            'Should not be able to re-register a player who still has an acitve session');
+    });
+
+    socket1.emit('tryReconnect', {playerId: playerId});
+
+    testEmitter.once('error', function (err) {
+        t.equal(err.message, 'playerId player1 has not been registered yet, please register before reconnecting',
+            'Cannot re-register a player who has not previously registered');
+    });
+    socket1.emit('tryReconnect', {playerId: 'player1'});
+    socket.connected = false;
+    testEmitter.once('playerReconnected', function (msg) {
+        t.equal(msg.playerId, playerId, 'player0 should be successfully re-registered');
+        t.ok(!sessionController.sessions[socket.id],
+            'The original socket that got disconnected should no longer be on the session controller');
+        t.ok(sessionController.playersToSessions[playerId].id, socket1.id,
+            'The socketId for player0 should be the reconnected socket');
+        t.ok(sessionController.sessions[socket1.id].playerId, playerId,
+            'The reconnected socket should have player0 as its playerId');
+    });
+
+    socket1.emit('tryReconnect', {playerId: playerId});
+    testEmitter.once('error', function (err) {
+        t.equal(err.message, 'session already has a playerId player0',
+            'Cannot reconnect after already reconnecting');
+    });
+
+    socket1.emit('tryReconnect', {playerId: playerId});
+
 });
 
 

@@ -32,6 +32,45 @@ SessionController.prototype._validateRegistered = function (sessionSocketId) {
     }
 };
 
+
+SessionController.prototype._tryReconnect = function (sessionSocketId, playerId, callback) {
+    var session = this.sessions[sessionSocketId],
+        existingSession = this.playersToSessions[playerId],
+        self = this;
+    if (session.playerId !== null) {
+        var error = new Error('session already has a playerId ' + session.playerId);
+
+        throw error;
+    }
+
+    if (!existingSession) {
+        var error = new Error('playerId ' + playerId + ' has not been registered yet, please register before reconnecting');
+
+        throw error;
+    }
+
+    if (!existingSession.socket.connected) {
+        session.playerId = playerId;
+        delete this.sessions[existingSession.id];
+        this.playersToSessions[playerId] = session;
+        this.emitter.emit('playerReconnected', {
+            playerId: playerId
+        });
+    } else {
+        var error = new Error('playerId ' + playerId + ' already has an active session');
+
+        throw(error);
+    }
+};
+
+
+SessionController.prototype._handleTryReconnect = function (sessionSocketId, msg, callback) {
+    console.log('handleTryReconnect')
+    var playerId = msg.playerId;
+    this.exec(this._tryReconnect.bind(this, sessionSocketId, playerId, callback));
+};
+
+
 SessionController.prototype._registerPlayer = function (sessionSocketId, playerId) {
     var session = this.sessions[sessionSocketId],
         self = this;
@@ -341,6 +380,7 @@ SessionController.prototype._registerSession = function (sessionSocket) {
     sessionSocket.emit('hi', sessionSocketId);
 
     sessionSocket.on('registerPlayer', this._handleRegisterPlayer.bind(this, sessionSocketId));
+    sessionSocket.on('tryReconnect', this._handleTryReconnect.bind(this, sessionSocketId));
     sessionSocket.on('createGame', this._handleCreateGame.bind(this, sessionSocketId));
     sessionSocket.on('joinGame', this._handleJoinGame.bind(this, sessionSocketId));
     sessionSocket.on('startGame', this._handleStartGame.bind(this, sessionSocketId));
