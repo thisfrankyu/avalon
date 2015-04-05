@@ -11,6 +11,17 @@ angular.module('avalonApp')
         memo[playerId] = false;
         return memo;
       }, {});
+      socket.removeAllListeners('questerSelected');
+      socket.removeAllListeners('questerRemoved');
+
+      if (player.state.id !== game.state.playerOrder[game.state.kingIndex]) {
+          socket.on('questerSelected', function (msg) {
+        $scope.questers[msg.selectedQuesterId] = true;
+      });
+          socket.on('questerRemoved', function (msg) {
+        $scope.questers[msg.removedQuesterId] = false;
+      });
+      }
     }
 
     init();
@@ -56,14 +67,7 @@ angular.module('avalonApp')
     };
 
 
-    if (player.state.id !== game.state.playerOrder[game.state.kingIndex]) {
-      socket.on('questerSelected', function (msg) {
-        $scope.questers[msg.selectedQuesterId] = true;
-      });
-      socket.on('questerRemoved', function (msg) {
-        $scope.questers[msg.removedQuesterId] = false;
-      });
-    }
+
 
     $scope.submitQuesters = function() {
       socket.emit('submitQuesters', {

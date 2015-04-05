@@ -21,7 +21,7 @@ angular.module('avalonApp')
       console.log(msg);
       $scope.votes = msg.votes;
       game.state.currentQuest().numRejections++;
-      game.state.kingIndex++;
+      game.state.kingIndex = (game.state.kingIndex + 1) % game.state.playerOrder.length;
       game.state.stage = game.STAGES.SELECT_QUESTERS;
       $rootScope.$broadcast('stateChanged', game.state.stage);
     });

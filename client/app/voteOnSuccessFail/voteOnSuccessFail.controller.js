@@ -7,7 +7,7 @@ angular.module('avalonApp')
     socket.on('questEnded', function (msg) {
       game.state.currentQuest().result = msg.questResult;
       game.state.questIndex++;
-      game.state.kingIndex++;
+      game.state.kingIndex = (game.state.kingIndex + 1) % game.state.playerOrder.length;
       game.state.stage = msg.stage;
       $rootScope.$broadcast('stateChanged', game.state.stage);
     });
