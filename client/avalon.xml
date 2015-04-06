@@ -31,7 +31,7 @@
     <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
   </head>
   <body>
-    <iframe src="https://avalon.thetoothpick.com:9000/" style="overflow:hidden;overflow-x:hidden;overflow-y:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px;border:none;"></iframe>
+    <iframe src="https://avalon.thetoothpick.com:9000/" style="overflow:hidden;height:100%;width:100%;position:absolute;top:0px;left:0px;right:0px;bottom:0px;border:none;"></iframe>
   </body>
 </html>
 ]]></Content>
