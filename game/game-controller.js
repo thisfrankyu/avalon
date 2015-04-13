@@ -184,13 +184,17 @@ GameController.prototype._submitQuesters = function (playerId, gameId, callback)
     var game = this.games[gameId];
     this._validateGame(gameId);
     game.submitQuestersForVoting(playerId);
+    var filteredGameView = new FilteredGameView(game);
     var questersSubmittedMsg = {
         gameId: gameId,
         selectedQuesters: game.currentQuest().selectedQuesters,
-        filteredGameView: new FilteredGameView(game)
+        filteredGameView: filteredGameView
     };
     if (callback) callback(questersSubmittedMsg);
     this.emitter.emit('questersSubmitted', questersSubmittedMsg);
+    this.emitter.emit('stageChanged', {
+        filteredGameView: filteredGameView
+    });
 };
 
 GameController.prototype._handleSubmitQuesters = function (msg) {
@@ -202,7 +206,7 @@ GameController.prototype._handleSubmitQuesters = function (msg) {
 
 GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, callback) {
     var game = this.games[gameId],
-        result;
+        result, filteredGameView;
     this._validateGame(gameId);
     result = game.voteAcceptReject(playerId, vote);
 
@@ -216,20 +220,29 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
     if (callback) callback(null, votedOnQuestersMsg);
 
     if (result.stage === STAGES.QUEST) {
+        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questAccepted', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             votes: result.votes,
-            filteredGameView: new FilteredGameView(game)
+            filteredGameView: filteredGameView
+        });
+        this.emitter.emit('stageChanged', {
+            filteredGameView: filteredGameView
         });
     }
     if (result.stage === STAGES.SELECT_QUESTERS) {
+        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questRejected', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             numRejections: game.currentQuest().numRejections,
             votes: result.votes,
-            filteredGameView: new FilteredGameView(game)
+            filteredGameView: filteredGameView
+        });
+
+        this.emitter.emit('stageChanged', {
+            filteredGameView: filteredGameView
         });
     }
     // TODO: what to do when game ends

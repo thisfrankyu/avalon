@@ -65,7 +65,6 @@ SessionController.prototype._tryReconnect = function (sessionSocketId, playerId,
 
 
 SessionController.prototype._handleTryReconnect = function (sessionSocketId, msg, callback) {
-    console.log('handleTryReconnect')
     var playerId = msg.playerId;
     this.exec(this._tryReconnect.bind(this, sessionSocketId, playerId, callback));
 };
@@ -422,6 +421,7 @@ SessionController.prototype._handleVotedOnQuesters = function (msg) {
         playerId = msg.playerId,
         filteredGameView = msg.filteredGameView;
     this.io.emit('votedOnQuesters', {gameId: gameId, playerId: playerId, filteredGameView: filteredGameView});
+    this.io.emit('gameUpdated', {filteredGameView: filteredGameView});
 };
 
 SessionController.prototype._handleVotedOnSuccessFail = function (msg) {
@@ -429,6 +429,7 @@ SessionController.prototype._handleVotedOnSuccessFail = function (msg) {
         playerId = msg.playerId,
         filteredGameView = msg.filteredGameView;
     this.io.emit('votedOnSuccessFail', {gameId: gameId, playerId: playerId, filteredGameView: filteredGameView});
+    this.io.emit('gameUpdated', {filteredGameView: filteredGameView});
 };
 
 SessionController.prototype._handleQuestEnded = function (msg) {
@@ -448,6 +449,9 @@ SessionController.prototype._passEventToClient = function (event) {
     var self = this;
     this.emitter.on(event, function (msg) {
         self.io.emit(event, msg);
+        if (msg.filteredGameView) {
+            self.io.emit('gameUpdated', {filteredGameView: msg.filteredGameView});
+        }
     });
 };
 
@@ -468,6 +472,7 @@ SessionController.prototype.init = function () {
     this._passEventToClient('killMerlinStage');
     this._passEventToClient('merlinTargeted');
     this._passEventToClient('killMerlinAttempted');
+    this._passEventToClient('stageChanged');
 };
 
 exports.SessionController = SessionController;
