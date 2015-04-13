@@ -16,7 +16,6 @@ function FilteredGameView(game) {
     this.quests = game.quests;
     this.currentVotesOnQuest = game.currentVotesOnQuest;
     this.currentSuccessFailVotes = _.keys(game.currentSuccessFailVotes);
-    this.players = game.players;
     this.goodSpecialRoles = game.goodSpecialRoles;
     this.badSpecialRoles = game.badSpecialRoles;
     this.kingIndex = game.kingIndex;

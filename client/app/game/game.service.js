@@ -15,15 +15,19 @@ var STAGES = {
 function GameState() {
   this.id = null;
   this.ownerId = null;
-  this.players = [];
-  this.thumbView = [];
-  this.quests = [];
-  this.kingIndex = 0;
-  this.questIndex = 0;
-  this.badSpecialRoles = [];
-  this.goodSpecialRoles = [];
-  this.playerOrder = [];
   this.stage = STAGES.NOT_STARTED;
+  this.numSuccesses = 0;
+  this.numFails = 0;
+  this.numRejections = 0;
+  this.questIndex = 0;
+  this.quests = [];
+  this.currentVotesOnQuest = {};
+  this.currentSuccessFailVotes = [];
+  this.goodSpecialRoles = [];
+  this.badSpecialRoles = [];
+  this.kingIndex = 0;
+  this.playerOrder= [];
+  this.targetedMerlin = null;
 }
 
 GameState.prototype.currentKing = function () {
@@ -32,6 +36,25 @@ GameState.prototype.currentKing = function () {
 
 GameState.prototype.currentQuest = function () {
   return this.quests[this.questIndex];
+};
+
+GameState.prototype.copyFrom = function(gameView) {
+  this.id = gameView.id;
+  this.ownerId = gameView.ownerId;
+  this.stage = gameView.stage;
+  this.numSuccesses = gameView.numSuccesses;
+  this.numFails = gameView.numFails;
+  this.numRejections = gameView.numRejections;
+  this.questIndex = gameView.questIndex;
+  this.quests = gameView.quests;
+  this.currentVotesOnQuest = gameView.currentVotesOnQuest;
+  this.currentSuccessFailVotes = gameView.currentSuccessFailVotes;
+  this.players = gameView.players;
+  this.goodSpecialRoles = gameView.goodSpecialRoles;
+  this.badSpecialRoles = gameView.badSpecialRoles;
+  this.kingIndex = gameView.kingIndex;
+  this.playerOrder= gameView.playerOrder;
+  this.targetedMerlin = gameView.targetedMerlin;
 };
 
 angular.module('avalonApp')
