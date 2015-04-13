@@ -406,7 +406,8 @@ SessionController.prototype._gameStarted = function (msg) {
                 gameOptions: msg.gameOptions,
                 playerOrder: msg.playerOrder,
                 kingIndex: msg.kingIndex,
-                quests: msg.quests
+                quests: msg.quests,
+                filteredGameView: msg.filteredGameView
             };
         session.socket.emit('gameStarted', gameStartedMsg);
     });
