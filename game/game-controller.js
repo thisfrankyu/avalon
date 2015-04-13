@@ -1,6 +1,3 @@
-/**
- * Created by frank on 2/1/15.
- */
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -13,6 +10,7 @@ var Game = engine.Game;
 var STAGES = engine.STAGES;
 var QUEST_STATE = require('./quest').QUEST_STATE;
 var RULES = require('./rules');
+var FilteredGameView = require('./filtered-game-view').FilteredGameView;
 
 function GameController(emitter) {
     this.emitter = emitter;
@@ -130,7 +128,8 @@ GameController.prototype._handleStartGame = function (msg) {
         gameOptions: {
             badSpecialRoles: game.badSpecialRoles,
             goodSpecialRoles: game.goodSpecialRoles
-        }
+        },
+        filteredGameView: new FilteredGameView(game)
     };
     if (msg.callback) msg.callback(null, gameStartedMsg);
     this.emitter.emit('gameStarted', gameStartedMsg);
@@ -145,12 +144,14 @@ GameController.prototype._selectQuester = function (playerId, requestingPlayerId
 GameController.prototype._handleSelectQuester = function (msg) {
     var playerId = msg.playerId,
         requestingPlayerId = msg.requestingPlayerId,
-        gameId = msg.gameId;
+        gameId = msg.gameId,
+        game = this.games[gameId];
     if (!this.exec(this._selectQuester.bind(this, playerId, requestingPlayerId, gameId), msg.callback)) return;
     var questerSelectedMsg = {
         gameId: gameId,
         selectedQuesterId: playerId,
-        requestingPlayerId: requestingPlayerId
+        requestingPlayerId: requestingPlayerId,
+        filteredGameView: new FilteredGameView(game)
     };
     if (msg.callback) msg.callback(null, questerSelectedMsg);
     this.emitter.emit('questerSelected', questerSelectedMsg);
@@ -165,13 +166,15 @@ GameController.prototype._removeQuester = function (playerId, requestingPlayerId
 GameController.prototype._handleRemoveQuester = function (msg) {
     var playerId = msg.playerId,
         requestingPlayerId = msg.requestingPlayerId,
-        gameId = msg.gameId;
+        gameId = msg.gameId,
+        game = this.games[gameId];
     if (!this.exec(this._removeQuester.bind(this, playerId, requestingPlayerId, gameId), msg.callback)) return;
 
     var questerRemovedMsg = {
         gameId: gameId,
         removedQuesterId: playerId,
-        requestingPlayerId: requestingPlayerId
+        requestingPlayerId: requestingPlayerId,
+        filteredGameView: new FilteredGameView(game)
     };
     if (msg.callback) msg.callback(null, questerRemovedMsg);
     this.emitter.emit('questerRemoved', questerRemovedMsg);
@@ -183,7 +186,8 @@ GameController.prototype._submitQuesters = function (playerId, gameId, callback)
     game.submitQuestersForVoting(playerId);
     var questersSubmittedMsg = {
         gameId: gameId,
-        selectedQuesters: game.currentQuest().selectedQuesters
+        selectedQuesters: game.currentQuest().selectedQuesters,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(questersSubmittedMsg);
     this.emitter.emit('questersSubmitted', questersSubmittedMsg);
@@ -205,7 +209,8 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
     var votedOnQuestersMsg = {
         gameId: gameId,
         playerId: playerId,
-        vote: vote
+        vote: vote,
+        filteredGameView: new FilteredGameView(game)
     };
     this.emitter.emit('votedOnQuesters', votedOnQuestersMsg);
     if (callback) callback(null, votedOnQuestersMsg);
@@ -214,7 +219,8 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
         this.emitter.emit('questAccepted', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
-            votes: result.votes
+            votes: result.votes,
+            filteredGameView: new FilteredGameView(game)
         });
     }
     if (result.stage === STAGES.SELECT_QUESTERS) {
@@ -222,7 +228,8 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             numRejections: game.currentQuest().numRejections,
-            votes: result.votes
+            votes: result.votes,
+            filteredGameView: new FilteredGameView(game)
         });
     }
     // TODO: what to do when game ends
@@ -244,7 +251,8 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
     var votedOnSuccessFailMsg = {
         gameId: gameId,
         playerId: playerId,
-        vote: vote
+        vote: vote,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(null, votedOnSuccessFailMsg);
     this.emitter.emit('votedOnSuccessFail', votedOnSuccessFailMsg);
@@ -255,7 +263,8 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
             questResult: result.voteResult,
             questIndex: result.questIndex,
             nextQuest: game.currentQuest(),
-            stage: result.stage
+            stage: result.stage,
+            filteredGameView: new FilteredGameView(game)
         };
         this.emitter.emit('questEnded', questEndedMsg);
         if (result.stage === STAGES.KILL_MERLIN) {
@@ -268,7 +277,8 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
                 gameId: gameId,
                 stage: result.stage,
                 goodPlayerIds: goodPlayerIds,
-                assassinInGame: assassinInGame
+                assassinInGame: assassinInGame,
+                filteredGameView: new FilteredGameView(game)
             });
         }
     }
@@ -291,7 +301,8 @@ GameController.prototype._targetMerlin = function (targetId, requestingPlayerId,
     msg = {
         targetId: targetId,
         requestingPlayerId: requestingPlayerId,
-        gameId: gameId
+        gameId: gameId,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(null, msg);
     this.emitter.emit('merlinTargeted', msg);
@@ -313,7 +324,8 @@ GameController.prototype._attemptKillMerlin = function (requestingPlayerId, game
     msg = {
         requestingPlayerId: requestingPlayerId,
         gameId: gameId,
-        stage: game.stage
+        stage: game.stage,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(null, msg);
     this.emitter.emit('killMerlinAttempted', msg);
