@@ -35,7 +35,7 @@ describe('stuff View', function () {
           if(isPresent) {
             _.times(numQuesters[i], function (j) {
               // TODO: move to page object
-              aBrowser.element(by.name('player'+j)).click();
+              gameViewPage.getSelectPlayerCheckBox(j).click();
             });
             gameViewPage.submitQuestersButton.click();
           }
