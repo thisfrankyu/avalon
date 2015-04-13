@@ -418,14 +418,16 @@ SessionController.prototype._handleGameStarted = function (msg) {
 
 SessionController.prototype._handleVotedOnQuesters = function (msg) {
     var gameId = msg.gameId,
-        playerId = msg.playerId;
-    this.io.emit('votedOnQuesters', {gameId: gameId, playerId: playerId});
+        playerId = msg.playerId,
+        filteredGameView = msg.filteredGameView;
+    this.io.emit('votedOnQuesters', {gameId: gameId, playerId: playerId, filteredGameView: filteredGameView});
 };
 
 SessionController.prototype._handleVotedOnSuccessFail = function (msg) {
     var gameId = msg.gameId,
-        playerId = msg.playerId;
-    this.io.emit('votedOnSuccessFail', {gameId: gameId, playerId: playerId});
+        playerId = msg.playerId,
+        filteredGameView = msg.filteredGameView;
+    this.io.emit('votedOnSuccessFail', {gameId: gameId, playerId: playerId, filteredGameView: filteredGameView});
 };
 
 SessionController.prototype._handleQuestEnded = function (msg) {
@@ -435,7 +437,8 @@ SessionController.prototype._handleQuestEnded = function (msg) {
         questResult: msg.questResult,
         questIndex: msg.questIndex,
         nextQuest: msg.nextQuest,
-        stage: msg.stage
+        stage: msg.stage,
+        filteredGameView: msg.filteredGameView
     };
     this.io.emit('questEnded', response);
 };
