@@ -511,7 +511,8 @@ test('test voteAcceptReject', function (t) {
     testEmitter.once('submitQuesters', function (msg) {
         var response = {
             gameId: gameId,
-            selectedQuesters: [playerId, player1]
+            selectedQuesters: [playerId, player1],
+            filteredGameView: {gameId: msg.gameId}
         };
         msg.callback(null, response);
         testEmitter.emit('questersSubmitted', response);
