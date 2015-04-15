@@ -1,15 +1,16 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('VoteOnQuestersCtrl', function ($scope, $rootScope, $location, $modal, game, player, socket) {
+  .controller('VoteOnQuestersCtrl', function ($scope, $rootScope, $location, $modal, game, player) {
     var modal;
     $scope.game = game;
-    socket.on('questRejected', function (msg) {
-      $rootScope.$broadcast('stateChanged', game.state.stage);
-    });
-    socket.on('questAccepted', function (msg) {
-      $rootScope.$broadcast('stateChanged', game.state.stage);
-    });
+
+    function updateVoted() {
+      $scope.voted = _.reduce(game.state.playerOrder, function (memo, playerId) {
+        memo[playerId] = _.has(game.state.currentVotesOnQuest, playerId);
+        return memo;
+      }, {});
+    }
 
     function openVoteModal() {
       return $modal.open({
@@ -26,26 +27,19 @@ angular.module('avalonApp')
       if (game.state.stage !== game.STAGES.VOTE_ON_QUESTERS) {
         return;
       }
-
-      $scope.voted = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = _.has(game.state.currentVotesOnQuest, playerId);
-        return memo;
-      }, {});
+      updateVoted();
     });
 
     $rootScope.$on('stageChanged', function (scope, msg) {
-      $scope.voted = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = _.has(game.state.currentVotesOnQuest, playerId);
-        return memo;
-      }, {});
-      if (msg === game.STAGES.VOTE_ON_QUESTERS) {
-        if (!_.has(game.state.currentVotesOnQuest, player.state.id)) {
-          modal = openVoteModal();
-        }
-      } else {
+      if (msg !== game.STAGES.VOTE_ON_QUESTERS){
         if (modal) {
-          modal.dismiss('No longer in the vote on questers stage');
+          modal.dismiss();
         }
+        return;
+      }
+      updateVoted();
+      if (!_.has(game.state.currentVotesOnQuest, player.state.id)) {
+        modal = openVoteModal();
       }
     });
   });
