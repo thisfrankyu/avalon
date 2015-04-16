@@ -100,6 +100,23 @@ GameController.prototype._handleJoinGame = function (msg) {
     this.emitter.emit('gameJoined', gameJoinedMsg);
 };
 
+GameController.prototype._getFilteredGameView = function (gameId) {
+    var game = this.games[gameId];
+    this._validateGame(gameId);
+    return new FilteredGameView(game);
+};
+
+GameController.prototype._handleGetFilteredGameView = function (msg) {
+    var filteredGameView = this.exec(this._getFilteredGameView.bind(this, msg.gameId)),
+        filteredGameViewMsg = {
+            gameId: msg.gameId,
+            player: this.players[msg.playerId],
+            filteredGameView: filteredGameView
+        };
+    if (msg.callback) msg.callback(null, filteredGameViewMsg);
+    this.emitter.emit('filteredGameView', filteredGameViewMsg);
+};
+
 GameController.prototype._startGame = function (gameId, playerId) {
     var game = this.games[gameId];
     this._validateGame(gameId);
@@ -358,6 +375,7 @@ GameController.prototype.init = function () {
     this.emitter.on('createGame', self._handleCreateGame.bind(self));
     this.emitter.on('joinGame', self._handleJoinGame.bind(self));
     this.emitter.on('startGame', self._handleStartGame.bind(self));
+    this.emitter.on('getFilteredGameView', self._handleGetFilteredGameView.bind(self));
     this.emitter.on('selectQuester', self._handleSelectQuester.bind(self));
     this.emitter.on('removeQuester', self._handleRemoveQuester.bind(self));
     this.emitter.on('submitQuesters', self._handleSubmitQuesters.bind(self));

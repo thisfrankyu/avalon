@@ -89,7 +89,6 @@ test('test re-register player', function (t) {
         sessionController = new SessionController(testEmitter, io),
         session;
 
-    t.plan(8);
     sessionController.init();
     io.emit('connection', socket);
     io.emit('connection', socket1);
@@ -111,31 +110,50 @@ test('test re-register player', function (t) {
             'Should not be able to re-register a player who still has an acitve session');
     });
 
-    socket1.emit('tryReconnect', {playerId: playerId});
+    var tryReconnectErrorCallback = function(err){
+        t.equal(err.message, 'playerId player0 already has an active session',
+            'Should not be able to re-register a player who still has an acitve session');
+    };
+
+    socket1.emit('tryReconnect', {playerId: playerId}, tryReconnectErrorCallback);
 
     testEmitter.once('error', function (err) {
         t.equal(err.message, 'playerId player1 has not been registered yet, please register before reconnecting',
             'Cannot re-register a player who has not previously registered');
     });
-    socket1.emit('tryReconnect', {playerId: 'player1'});
+
+    tryReconnectErrorCallback = function(err){
+        t.equal(err.message, 'playerId player1 has not been registered yet, please register before reconnecting',
+            'Cannot re-register a player who has not previously registered');
+    };
+
+    socket1.emit('tryReconnect', {playerId: 'player1'}, tryReconnectErrorCallback);
     socket.connected = false;
-    testEmitter.once('playerReconnected', function (msg) {
-        t.equal(msg.playerId, playerId, 'player0 should be successfully re-registered');
+
+    var tryReconnectSuccessfulCallback = function (error, playerReconnectedMsg) {
+        t.equal(playerReconnectedMsg.playerId, playerId, 'player0 should be successfully re-registered');
         t.ok(!sessionController.sessions[socket.id],
             'The original socket that got disconnected should no longer be on the session controller');
         t.ok(sessionController.playersToSessions[playerId].id, socket1.id,
             'The socketId for player0 should be the reconnected socket');
         t.ok(sessionController.sessions[socket1.id].playerId, playerId,
             'The reconnected socket should have player0 as its playerId');
-    });
+    };
 
-    socket1.emit('tryReconnect', {playerId: playerId});
+    socket1.emit('tryReconnect', {playerId: playerId}, tryReconnectSuccessfulCallback);
     testEmitter.once('error', function (err) {
         t.equal(err.message, 'session already has a playerId player0',
             'Cannot reconnect after already reconnecting');
     });
 
-    socket1.emit('tryReconnect', {playerId: playerId});
+    tryReconnectErrorCallback = function (err) {
+        console.log('tryReconnectErrorCallback last', err);
+        t.equal(err.message, 'session already has a playerId player0',
+            'Cannot reconnect after already reconnecting');
+        t.end();
+    };
+
+    socket1.emit('tryReconnect', {playerId: playerId, }, tryReconnectErrorCallback);
 
 });
 
