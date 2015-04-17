@@ -40,7 +40,6 @@ function Game(gameId, ownerId, options) {
 
     this.questIndex = 0;
     this.quests = []; //quest
-    this.currentVotesOnQuest = {}; //playerId --> vote
     this.currentSuccessFailVotes = {}; //playerId --> vote
 
     this.players = {}; //playerId --> players
@@ -254,10 +253,12 @@ Game.prototype.voteAcceptReject = function (votingPlayerId, vote) {
     }
 
     this._validatePlayerInGame(votingPlayerId);
-    this.currentVotesOnQuest[votingPlayerId] = vote;
-    var votes = _.clone(this.currentVotesOnQuest);
+    this.currentQuest().votesOnQuest[votingPlayerId] = vote;
+    var votes = _.clone(this.currentQuest().votesOnQuest);
+    //this.currentVotesOnQuest[votingPlayerId] = vote;
+    //var votes = _.clone(this.currentVotesOnQuest);
     //TODO: notify clients/controller that votingPlayerId has voted
-    if (Object.keys(this.currentVotesOnQuest).length ===
+    if (Object.keys(this.currentQuest().votesOnQuest).length ===
         Object.keys(this.players).length) {
         this._resolveVote();
     }
@@ -265,9 +266,8 @@ Game.prototype.voteAcceptReject = function (votingPlayerId, vote) {
 };
 
 Game.prototype._resolveVote = function () {
-    var votePassed = this.currentQuest().voteOnAcceptOrReject(_.values(this.currentVotesOnQuest));
+    var votePassed = this.currentQuest().voteOnAcceptOrReject(_.values(this.currentQuest().votesOnQuest));
     this.kingIndex = (this.kingIndex + 1) % this.playerOrder.length;
-    this.currentVotesOnQuest = {};
     if (votePassed) {
         this._questAccepted();
         return;

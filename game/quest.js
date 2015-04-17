@@ -18,6 +18,7 @@ function Quest(numPlayers, numToFail) {
     this.numToFail = numToFail;
     this.numRejections = 0;
     this.selectedQuesters = [];
+    this.votesOnQuest = {}; // playerId --> vote
     this.result = QUEST_STATE.UNDECIDED;
 }
 
