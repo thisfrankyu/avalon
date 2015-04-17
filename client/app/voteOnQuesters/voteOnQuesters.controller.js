@@ -5,12 +5,16 @@ angular.module('avalonApp')
     var modal;
     $scope.game = game;
 
-    function updateVoted() {
-      $scope.voted = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = _.has(game.state.currentVotesOnQuest, playerId);
-        return memo;
-      }, {});
-    }
+    $scope.hasVoted = function(playerId) {
+      return _.has(game.state.currentQuest().votesOnQuest, playerId);
+    };
+
+    $scope.getVote = function(playerId) {
+      if (game.state.stage === game.STAGES.VOTE_ON_QUESTERS || !$scope.hasVoted(playerId)) {
+        return 0;
+      }
+      return game.state.currentQuest().votesOnQuest[playerId];
+    };
 
     function openVoteModal() {
       return $modal.open({
@@ -23,12 +27,7 @@ angular.module('avalonApp')
       });
     }
 
-    $rootScope.$on('gameUpdated', function (scope, msg) {
-      if (game.state.stage !== game.STAGES.VOTE_ON_QUESTERS) {
-        return;
-      }
-      updateVoted();
-    });
+    //$rootScope.$on('gameUpdated', function (scope, msg) { });
 
     $rootScope.$on('stageChanged', function (scope, msg) {
       if (msg !== game.STAGES.VOTE_ON_QUESTERS){
@@ -37,8 +36,7 @@ angular.module('avalonApp')
         }
         return;
       }
-      updateVoted();
-      if (!_.has(game.state.currentVotesOnQuest, player.state.id)) {
+      if (!$scope.hasVoted(player.state.id)) {
         modal = openVoteModal();
       }
     });
