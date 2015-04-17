@@ -70,6 +70,10 @@ Quest.prototype.clearSelectedQuesters = function () {
     this.selectedQuesters = [];
 };
 
+Quest.prototype.clearVotesOnQuest = function () {
+    this.votesOnQuest = {};
+};
+
 
 exports.Quest = Quest;
 exports.QUEST_STATE = QUEST_STATE;

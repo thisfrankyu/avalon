@@ -242,6 +242,7 @@ Game.prototype.submitQuestersForVoting = function (requestingPlayerId) {
         throw new Error('Cannot submit questers until enough questers have been chosen');
     }
     this.stage = STAGES.VOTE_ON_QUESTERS;
+    this.currentQuest().clearVotesOnQuest();
 };
 
 
