@@ -5,13 +5,9 @@ angular.module('avalonApp')
     $scope.game = game;
     $scope.player = player;
 
-    updateVoted();
-    function updateVoted(){
-      $scope.voted = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = _.contains(game.state.currentSuccessFailVotes, playerId);
-        return memo;
-      }, {});
-    }
+    $scope.hasVoted = function(playerId) {
+      return _.contains(game.state.currentSuccessFailVotes, playerId);
+    };
 
     $scope.vote = function(vote){
       socket.emit('voteSuccessFail', {vote: vote, gameId: game.state.id});
@@ -26,9 +22,7 @@ angular.module('avalonApp')
     $rootScope.$on('gameUpdated', function () {
       if (game.state.stage !== game.STAGES.QUEST){
         $modalInstance.close();
-        return;
       }
-      updateVoted();
     });
 
   });
