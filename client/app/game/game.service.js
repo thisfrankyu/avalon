@@ -28,6 +28,7 @@ function GameState() {
   this.kingIndex = 0;
   this.playerOrder= [];
   this.targetedMerlin = null;
+  this.goodPlayerIds = null;
 }
 
 GameState.prototype.currentKing = function () {
@@ -55,6 +56,7 @@ GameState.prototype.copyFrom = function(gameView) {
   this.kingIndex = gameView.kingIndex;
   this.playerOrder= gameView.playerOrder;
   this.targetedMerlin = gameView.targetedMerlin;
+  this.goodPlayerIds = gameView.goodPlayerIds;
 };
 
 angular.module('avalonApp')

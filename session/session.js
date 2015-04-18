@@ -40,7 +40,6 @@ SessionController.prototype._tryReconnect = function (sessionSocketId, playerId,
     if (session.playerId !== null) {
         var error = new Error('session already has a playerId ' + session.playerId);
         if (callback) {
-            console.log('calling callback with err', error)
             callback(error);
         }
         throw error;

@@ -310,7 +310,12 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
                 assassinInGame: assassinInGame,
                 filteredGameView: new FilteredGameView(game)
             });
+
+            this.emitter.emit('stageChanged', {
+                filteredGameView: new FilteredGameView(game)
+            });
         }
+
     }
 };
 

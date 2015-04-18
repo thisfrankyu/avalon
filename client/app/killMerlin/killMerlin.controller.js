@@ -2,11 +2,11 @@
 
 angular.module('avalonApp')
   .controller('KillMerlinCtrl', function ($scope, $rootScope, $modal, socket, game, player) {
+    var modal;
     $scope.game = game;
 
     function openKillMerlinModal(goodPlayerIds, assassinInGame) {
-      console.log('in open kill merlin modal, goodPlayerIds', goodPlayerIds, 'assassinInGame', assassinInGame);
-      $modal.open({
+      return $modal.open({
         templateUrl: 'app/killMerlin/killMerlin.modal.html',
         controller: 'KillMerlinModalCtrl',
         backdrop: 'static',
@@ -20,8 +20,16 @@ angular.module('avalonApp')
       });
     }
 
-    socket.on('killMerlinStage', function (msg) {
-      console.log('killMerlinStage received, msg ' + JSON.stringify(msg));
-      openKillMerlinModal(msg.goodPlayerIds, msg.assassinInGame);
+    $rootScope.$on('stageChanged', function (scope, msg) {
+      if (msg !== game.STAGES.KILL_MERLIN){
+        if (modal) {
+          modal.dismiss();
+        }
+        return;
+      }
+
+      var assassinInGame = _.contains(game.state.badSpecialRoles, game.BAD_ROLES.ASSASSIN);
+
+      modal = openKillMerlinModal(game.state.goodPlayerIds, assassinInGame);
     });
   });

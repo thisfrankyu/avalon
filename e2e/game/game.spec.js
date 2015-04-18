@@ -28,7 +28,7 @@ describe('stuff View', function () {
     });
     page = new LobbyPage(browser);
     page.startGameButton.click();
-    /*_.times(3, function (i) {
+    _.times(3, function (i) {
       _.each(browsers, function (aBrowser) {
         var gameViewPage = new GameViewPage(aBrowser);
         gameViewPage.submitQuestersButton.isPresent().then(function(isPresent) {
@@ -57,7 +57,7 @@ describe('stuff View', function () {
           }
         });
       });
-    });*/
+    });
   });
 
   it('should do stuff', function () {
