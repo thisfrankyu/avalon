@@ -11,6 +11,11 @@ var Player = require('../game/player');
 
 function Socket(id) {
     this.id = id;
+    this.handshake = {
+        signedCookies: {
+            'connect.sid': id
+        }
+    };
     this.connected = true;
 }
 util.inherits(Socket, EventEmitter);

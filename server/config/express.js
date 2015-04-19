@@ -10,12 +10,12 @@ var morgan = require('morgan');
 var compression = require('compression');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
-var cookieParser = require('cookie-parser');
+var expressSession = require('express-session');
 var errorHandler = require('errorhandler');
 var path = require('path');
 var config = require('./environment');
 
-module.exports = function(app) {
+module.exports = function(app, sessionStore, cookieParser) {
   var env = app.get('env');
 
   app.set('views', config.root + '/server/views');
@@ -25,7 +25,8 @@ module.exports = function(app) {
   app.use(bodyParser.urlencoded({ extended: false }));
   app.use(bodyParser.json());
   app.use(methodOverride());
-  app.use(cookieParser());
+  app.use(cookieParser);
+  app.use(expressSession({secret: config.secrets.session, store: sessionStore}));
 
   if ('production' === env) {
     app.use(favicon(path.join(config.root, 'public', 'favicon.ico')));

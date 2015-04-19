@@ -4,11 +4,13 @@ function Session(sessionSocket) {
     this.id = sessionSocket.id;
     this.socket = sessionSocket;
     this.playerId = null;
+    this.gameId = null;
 }
 
-function SessionController(emitter, io) {
+function SessionController(emitter, io, sessionSockets) {
     this.emitter = emitter;
     this.io = io;
+    this.sessionSockets = sessionSockets || io;
     this.sessions = {}; //sessionSocketId -> session;
     this.playersToSessions = {}; //playerId --> session
 }
@@ -77,11 +79,12 @@ SessionController.prototype._tryReconnect = function (sessionSocketId, playerId,
 };
 
 SessionController.prototype._createFilteredGameViewCallback = function (session, callback) {
+    var sessionController = this;
     return function (error, filteredGameViewMsg) {
         if (error) {
             return;
         }
-        this._reconnect(filteredGameViewMsg, session, callback);
+        sessionController._reconnect(filteredGameViewMsg, session, callback);
     }
 };
 
@@ -133,6 +136,7 @@ SessionController.prototype._handleRegisterPlayer = function (sessionSocketId, m
 SessionController.prototype._createGame = function (sessionSocketId, gameId, gameOptions) {
     var session = this.sessions[sessionSocketId];
     this._validateRegistered(sessionSocketId);
+    session.gameId = gameId;
     this.emitter.emit('createGame', {
         gameId: gameId,
         playerId: session.playerId,
@@ -159,6 +163,7 @@ SessionController.prototype._handleCreateGame = function (sessionSocketId, msg) 
 SessionController.prototype._joinGame = function (sessionSocketId, gameId) {
     var session = this.sessions[sessionSocketId];
     this._validateRegistered(sessionSocketId);
+    session.gameId = gameId;
     this.emitter.emit('joinGame', {
         gameId: gameId,
         playerId: session.playerId,
@@ -404,9 +409,35 @@ SessionController.prototype._handleAttemptKillMerlin = function (sessionSocketId
     this.exec(this._attemptKillMerlin.bind(this, sessionSocketId, msg.gameId));
 };
 
-SessionController.prototype._registerSession = function (sessionSocket) {
-    var sessionSocketId = sessionSocket.id;
-    this.sessions[sessionSocketId] = new Session(sessionSocket);
+SessionController.prototype._registerSession = function (err, sessionSocket) {
+    if(err) {
+        // if sessionSocket is undefined and err has socket properties,
+        // this is being called from a test with different parameters
+        if(!sessionSocket && err.id && err.handshake) {
+            sessionSocket = err;
+        }
+        else {
+            console.log(err);
+        }
+    }
+    var sessionSocketId = sessionSocket.handshake.signedCookies['connect.sid'];
+    if(this.sessions[sessionSocketId]) {
+        var socketSession = this.sessions[sessionSocketId];
+        socketSession.socket = sessionSocket;
+        if(socketSession.playerId && socketSession.gameId) {
+            this.emitter.emit('getFilteredGameView', {
+                gameId: socketSession.gameId,
+                playerId: socketSession.playerId,
+                callback: this._createFilteredGameViewCallback(socketSession, function(err, msg) {
+                    console.log('reconnecting socket:', sessionSocketId);
+                    sessionSocket.emit('reconnect', msg);
+                })
+            });
+        }
+    }
+    else {
+        this.sessions[sessionSocketId] = new Session(sessionSocket);
+    }
     sessionSocket.emit('hi', sessionSocketId);
 
     sessionSocket.on('registerPlayer', this._handleRegisterPlayer.bind(this, sessionSocketId));
@@ -487,7 +518,7 @@ SessionController.prototype._passEventToClient = function (event) {
 };
 
 SessionController.prototype.init = function () {
-    this.io.on('connection', this._registerSession.bind(this));
+    this.sessionSockets.on('connection', this._registerSession.bind(this));
     this._passEventToClient('playerRegistered');
     this._passEventToClient('gameCreated');
     this._passEventToClient('gameJoined');

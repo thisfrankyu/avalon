@@ -21,7 +21,8 @@ function FilteredGameView(game) {
     this.goodSpecialRoles = game.goodSpecialRoles;
     this.badSpecialRoles = game.badSpecialRoles;
     this.kingIndex = game.kingIndex;
-    this.playerOrder= game.playerOrder;
+    this.playerOrder = game.playerOrder;
+    this.players = _.pluck(game.players, 'id');
     this.targetedMerlin = game.targetedMerlin;
     this.goodPlayerIds = game.stage === STAGES.KILL_MERLIN ? this._generateGoodPlayerIds(game) : null;
 }

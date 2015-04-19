@@ -21,4 +21,11 @@ angular.module('avalonApp')
       $rootScope.$broadcast('stageChanged', game.state.stage);
     });
 
+    socket.on('reconnect', function(msg) {
+      player.state = msg.player;
+      game.state.copyFrom(msg.filteredGameView);
+      $rootScope.$broadcast('gameUpdated');
+      $rootScope.$broadcast('stageChanged', game.state.stage);
+    });
+
   });
