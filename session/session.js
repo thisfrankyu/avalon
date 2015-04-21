@@ -35,73 +35,7 @@ SessionController.prototype._validateRegistered = function (sessionSocketId) {
 };
 
 
-SessionController.prototype._tryReconnect = function (sessionSocketId, playerId, gameId, callback) {
-    var session = this.sessions[sessionSocketId],
-        existingSession = this.playersToSessions[playerId],
-        self = this;
-    if (session.playerId !== null) {
-        var error = new Error('session already has a playerId ' + session.playerId);
-        if (callback) {
-            callback(error);
-        }
-        throw error;
-    }
 
-    if (!existingSession) {
-        var error = new Error('playerId ' + playerId + ' has not been registered yet, please register before reconnecting');
-        if (callback) callback(error);
-        throw error;
-    }
-
-    if (existingSession.socket.connected) {
-        var error = new Error('playerId ' + playerId + ' already has an active session');
-        if (callback) callback(error);
-        throw(error);
-    }
-
-    session.playerId = playerId;
-    delete this.sessions[existingSession.id];
-    this.playersToSessions[playerId] = session;
-    if (!gameId) {
-        var playerReconnectedMsg = {
-            playerId: playerId
-        };
-        if (callback) callback(null, playerReconnectedMsg);
-        return;
-    }
-
-    this.emitter.emit('getFilteredGameView', {
-        gameId: gameId,
-        playerId: playerId,
-        callback: this._createFilteredGameViewCallback(session, callback)
-    });
-
-};
-
-SessionController.prototype._createFilteredGameViewCallback = function (session, callback) {
-    var sessionController = this;
-    return function (error, filteredGameViewMsg) {
-        if (error) {
-            return;
-        }
-        sessionController._reconnect(filteredGameViewMsg, session, callback);
-    }
-};
-
-SessionController.prototype._reconnect = function (filteredGameViewMsg, session, callback) {
-    var playerReconnectedMsg = {
-        playerId: filteredGameViewMsg.player.id,
-        gameId: filteredGameViewMsg.gameId,
-        player: filteredGameViewMsg.player,
-        filteredGameView: filteredGameViewMsg.filteredGameView
-    };
-    if (callback) callback(null, playerReconnectedMsg);
-};
-
-SessionController.prototype._handleTryReconnect = function (sessionSocketId, msg, callback) {
-    var playerId = msg.playerId, gameId = msg.gameId;
-    this.exec(this._tryReconnect.bind(this, sessionSocketId, playerId, gameId, callback));
-};
 
 
 SessionController.prototype._registerPlayer = function (sessionSocketId, playerId) {
@@ -409,26 +343,36 @@ SessionController.prototype._handleAttemptKillMerlin = function (sessionSocketId
     this.exec(this._attemptKillMerlin.bind(this, sessionSocketId, msg.gameId));
 };
 
-SessionController.prototype._registerSession = function (err, sessionSocket) {
-    if(err) {
-        // if sessionSocket is undefined and err has socket properties,
-        // this is being called from a test with different parameters
-        if(!sessionSocket && err.id && err.handshake) {
-            sessionSocket = err;
+SessionController.prototype._createFilteredGameViewCallback = function (session, callback) {
+    var sessionController = this;
+    return function (error, filteredGameViewMsg) {
+        if (error) {
+            return;
         }
-        else {
-            console.log(err);
-        }
+        sessionController._reconnect(filteredGameViewMsg, session, callback);
     }
+};
+
+SessionController.prototype._reconnect = function (filteredGameViewMsg, session, callback) {
+    var playerReconnectedMsg = {
+        playerId: filteredGameViewMsg.player.id,
+        gameId: filteredGameViewMsg.gameId,
+        player: filteredGameViewMsg.player,
+        filteredGameView: filteredGameViewMsg.filteredGameView
+    };
+    if (callback) callback(null, playerReconnectedMsg);
+};
+
+SessionController.prototype._registerSession = function (err, sessionSocket) {
     var sessionSocketId = sessionSocket.handshake.signedCookies['connect.sid'];
-    if(this.sessions[sessionSocketId]) {
+    if (this.sessions[sessionSocketId]) {
         var socketSession = this.sessions[sessionSocketId];
         socketSession.socket = sessionSocket;
-        if(socketSession.playerId && socketSession.gameId) {
+        if (socketSession.playerId && socketSession.gameId) {
             this.emitter.emit('getFilteredGameView', {
                 gameId: socketSession.gameId,
                 playerId: socketSession.playerId,
-                callback: this._createFilteredGameViewCallback(socketSession, function(err, msg) {
+                callback: this._createFilteredGameViewCallback(socketSession, function (err, msg) {
                     console.log('reconnecting socket:', sessionSocketId);
                     sessionSocket.emit('reconnect', msg);
                 })
@@ -441,7 +385,6 @@ SessionController.prototype._registerSession = function (err, sessionSocket) {
     sessionSocket.emit('hi', sessionSocketId);
 
     sessionSocket.on('registerPlayer', this._handleRegisterPlayer.bind(this, sessionSocketId));
-    sessionSocket.on('tryReconnect', this._handleTryReconnect.bind(this, sessionSocketId));
     sessionSocket.on('createGame', this._handleCreateGame.bind(this, sessionSocketId));
     sessionSocket.on('joinGame', this._handleJoinGame.bind(this, sessionSocketId));
     sessionSocket.on('startGame', this._handleStartGame.bind(this, sessionSocketId));
