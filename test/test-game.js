@@ -442,6 +442,10 @@ test('test go on quest', function (t) {
         /Player is not on quest!/,
         'Player who is not on the quest cannot vote on the quest');
 
+    t.throws(game.voteSuccessFail.bind(game, 'player0', undefined),
+        /invalid vote value/,
+        'player should only be able to vote SUCCESS or FAIL');
+
     t.deepEqual(quest, game.currentQuest(), 'quest should point to currentQuest before voting');
     game.voteSuccessFail('player0', VOTE.SUCCESS);
 

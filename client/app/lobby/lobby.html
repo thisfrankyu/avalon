@@ -1,0 +1,35 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<header class="hero-unit" id="banner">
+  <div class="container">
+    <h1>Lobby</h1>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+    <div class="col-xs-6">
+      <h1 class="page-header">Game ID</h1>
+      <p>{{ game.state.id }}</p>
+    </div>
+    <div class="col-xs-6">
+      <h1 class="page-header">Owner ID</h1>
+      <p>{{ game.state.ownerId }}</p>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-6">
+      <h1 class="page-header">Players</h1>
+      <ul class="list-group">
+        <li class="list-group-item" ng-repeat="playerId in game.state.players">{{ playerId }}</li>
+      </ul>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 submit-button" ng-show="player.state.id == game.state.ownerId">
+      <button class="btn btn-success" ng-click="startGame()">Start Game</button>
+    </div>
+  </div>
+</div>
+
+<div ng-include="'components/footer/footer.html'"></div>

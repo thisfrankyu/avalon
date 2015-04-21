@@ -1,0 +1,10 @@
+<div ng-controller="SelectQuestersCtrl">
+  <ul id="selectQuestersCheckboxes" class="list-group">
+    <li class="list-group-item text-center" ng-repeat="playerId in game.state.playerOrder">
+      <checkbox ng-disabled="player.state.id !== game.state.playerOrder[game.state.kingIndex] || game.state.stage !== game.STAGES.SELECT_QUESTERS"
+                ng-model="questers[playerId]" name="{{playerId}}" ng-change="fireSelectOrRemoveQuester(playerId)"></checkbox>
+    </li>
+  </ul>
+  <button ng-if="player.state.id === game.state.playerOrder[game.state.kingIndex] && game.state.stage === game.STAGES.SELECT_QUESTERS"
+          class="btn btn-success" ng-click="submitQuesters()">Submit Questers</button>
+</div>

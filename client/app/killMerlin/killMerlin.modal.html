@@ -1,0 +1,14 @@
+<div class="modal-header">
+  <h3 class="modal-title">Kill Merlin</h3>
+</div>
+<div class="modal-body">
+  <div class="list-group">
+    <div class="list-group-item" ng-repeat="playerId in goodPlayerIds">
+      <label><input type="radio" ng-disabled="!canEdit()" name="{{playerId}}" ng-model="$parent.targetedPlayerId"
+               ng-change="targetMerlin(playerId)" ng-value="playerId" /> {{playerId}}</label>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-success" ng-disabled="!canEdit()" ng-click="killMerlin()">KILL MERLIN</button>
+</div>

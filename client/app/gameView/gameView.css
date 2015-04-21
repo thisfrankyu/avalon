@@ -1,0 +1,16 @@
+ul#questView {
+
+}
+
+ul#questView li.questContainer {
+  list-style: none;
+  display: inline-block;
+  padding: 0px 20px;
+}
+
+#playerList li.list-group-item,
+#playerThumbs li.list-group-item,
+#selectQuestersCheckboxes li.list-group-item {
+  height: 44px;
+  font-size: 16px;
+}

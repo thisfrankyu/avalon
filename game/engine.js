@@ -40,7 +40,6 @@ function Game(gameId, ownerId, options) {
 
     this.questIndex = 0;
     this.quests = []; //quest
-    this.currentVotesOnQuest = {}; //playerId --> vote
     this.currentSuccessFailVotes = {}; //playerId --> vote
 
     this.players = {}; //playerId --> players
@@ -243,6 +242,7 @@ Game.prototype.submitQuestersForVoting = function (requestingPlayerId) {
         throw new Error('Cannot submit questers until enough questers have been chosen');
     }
     this.stage = STAGES.VOTE_ON_QUESTERS;
+    this.currentQuest().clearVotesOnQuest();
 };
 
 
@@ -254,10 +254,12 @@ Game.prototype.voteAcceptReject = function (votingPlayerId, vote) {
     }
 
     this._validatePlayerInGame(votingPlayerId);
-    this.currentVotesOnQuest[votingPlayerId] = vote;
-    var votes = _.clone(this.currentVotesOnQuest);
+    this.currentQuest().votesOnQuest[votingPlayerId] = vote;
+    var votes = _.clone(this.currentQuest().votesOnQuest);
+    //this.currentVotesOnQuest[votingPlayerId] = vote;
+    //var votes = _.clone(this.currentVotesOnQuest);
     //TODO: notify clients/controller that votingPlayerId has voted
-    if (Object.keys(this.currentVotesOnQuest).length ===
+    if (Object.keys(this.currentQuest().votesOnQuest).length ===
         Object.keys(this.players).length) {
         this._resolveVote();
     }
@@ -265,9 +267,8 @@ Game.prototype.voteAcceptReject = function (votingPlayerId, vote) {
 };
 
 Game.prototype._resolveVote = function () {
-    var votePassed = this.currentQuest().voteOnAcceptOrReject(_.values(this.currentVotesOnQuest));
+    var votePassed = this.currentQuest().voteOnAcceptOrReject(_.values(this.currentQuest().votesOnQuest));
     this.kingIndex = (this.kingIndex + 1) % this.playerOrder.length;
-    this.currentVotesOnQuest = {};
     if (votePassed) {
         this._questAccepted();
         return;
@@ -296,10 +297,12 @@ Game.prototype.voteSuccessFail = function (votingPlayerId, vote) {
     if (this.stage !== STAGES.QUEST) {
         throw new Error('Tried to vote on success or fail before quest was started');
     }
-
+    if (vote !== VOTE.SUCCESS && vote !== VOTE.FAIL){
+        throw new Error('invalid vote value');
+    }
     this._validatePlayerOnQuest(votingPlayerId, vote);
     this.currentSuccessFailVotes[votingPlayerId] = vote;
-    var successFailVotes = this.currentSuccessFailVotes,
+    var successFailVotes = _.clone(this.currentSuccessFailVotes),
         voteResult = QUEST_STATE.UNDECIDED,
         questIndex = this.questIndex;
     //TODO: notify clients/controller that votingPlayerId has voted

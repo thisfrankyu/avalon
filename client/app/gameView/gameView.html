@@ -1,0 +1,75 @@
+<div ng-include="'components/navbar/navbar.html'"></div>
+
+<header class="hero-unit" id="banner">
+  <div class="container">
+    <h1>Game</h1>
+  </div>
+</header>
+
+<div class="container">
+  <div class="row">
+    <div class="col-xs-12">
+      <h1 class="page-header">Quests</h1>
+      <!--<p>{{game.state}}</p>-->
+      <!--<p>{{player.state}}</p>-->
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 text-center">
+      <ul id="questView">
+        <li ng-repeat="(index,quest) in game.state.quests" class="questContainer">
+          <h1>{{index + 1}}</h1>
+          <div ng-switch="quest.result">
+            <i ng-switch-when="0" class="fa fa-5x fa-question-circle"></i>
+            <i ng-switch-when="-1" class="fa fa-5x fa-times-circle text-danger"></i>
+            <i ng-switch-when="1" class="fa fa-5x fa-check-circle text-success"></i>
+          </div>
+          <div>Players On Quest: {{quest.numPlayers}}</div>
+          <div>Votes to Fail: {{quest.numToFail}}</div>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 text-center">
+      <ul id="questView">
+        <h3>Rejections: {{game.state.currentQuest().numRejections}}/5</h3>
+      </ul>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12">
+      <h1 class="page-header">Players</h1>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-2 col-xs-offset-2 col-lg-1 col-lg-offset-3">
+      <ul id="playerThumbs" class="list-group">
+        <li class="list-group-item text-center" ng-repeat="playerId in game.state.playerOrder">
+          <i ng-if="player.state.view.indexOf(playerId) !== -1" class="fa fa-thumbs-o-up"></i>&nbsp;
+        </li>
+      </ul>
+    </div>
+    <div class="col-xs-4 col-lg-4">
+      <ul id="playerList" class="list-group">
+        <li class="list-group-item" ng-repeat="playerId in game.state.playerOrder">
+          {{playerId}}
+          <i ng-if="playerId === game.state.playerOrder[game.state.kingIndex]"
+             class="fa fa-star"></i>
+        </li>
+      </ul>
+      <div class="text-center">You are {{player.state.id}} and your role is {{player.state.role}}</div>
+    </div>
+    <div class="col-xs-2 col-lg-1">
+      <div ng-include="'app/selectQuesters/selectQuesters.html'"></div>
+    </div>
+    <div class="col-xs-2 col-lg-1">
+      <div ng-include="'app/voteOnQuesters/voteOnQuesters.html'"></div>
+    </div>
+    <div ng-include="'app/voteOnSuccessFail/voteOnSuccessFail.html'"></div>
+    <div ng-include="'app/killMerlin/killMerlin.html'"></div>
+    <div ng-include="'app/endGame/endGame.html'"></div>
+  </div>
+</div>
+
+<div ng-include="'components/footer/footer.html'"></div>

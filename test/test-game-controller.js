@@ -68,7 +68,8 @@ test('test createGame', function (t) {
         t.equal(msg.gameId, gameId, 'make sure that the gameId is reported correctly');
         t.equal(game.ownerId, playerId, 'make sure the owner of the game is the playerId that created it');
         t.equal(msg.ownerId, playerId, 'make sure the owner of the game is correctly reported');
-
+        t.deepEqual(msg.gameOptions, {goodSpecialRoles : game.goodSpecialRoles, badSpecialRoles : game.badSpecialRoles},
+            'make sure that the game reports the gameOptions');
     });
     testEmitter.emit('registerPlayer', {playerId: playerId});
     testEmitter.once('error', function (e) {
@@ -94,6 +95,8 @@ test('test createGame', function (t) {
         }
     });
 });
+
+
 
 test('test joinGame', function (t) {
     var testEmitter = newEmitter(),
@@ -197,6 +200,7 @@ test('test startGame', function (t) {
         callback: callback
     });
 });
+
 
 test('test select/remove quester', function (t) {
     var testEmitter = newEmitter(),
@@ -596,6 +600,31 @@ test('test vote on success/fail succeeded', function (t) {
     });
 });
 
+
+test('test getFilteredGameView', function (t) {
+    var testEmitter = newEmitter(),
+        gameController = new GameController(testEmitter),
+        gameId = 'game0',
+        ownerId = 'player0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED', 'ASSASSIN'],
+        rolesToPlayers, assassinId, merlinId, game;
+
+    initGame(gameController, testEmitter, ownerId, gameId, goodSpecialRoles, badSpecialRoles);
+
+    game = gameController.games[gameId];
+    _.times(2, function () {
+        goOnQuest(testEmitter, game);
+    });
+    testEmitter.once('filteredGameView', function (msg) {
+        console.log('filteredGameView', JSON.stringify(msg, null, 2));
+        t.ok(msg);
+    });
+    testEmitter.emit('getFilteredGameView', {gameId: gameId, playerId: 'player0', callback: function(error, msg){
+        t.ok(msg);
+        t.end();
+    }});
+});
 
 test('test attempt to kill Merlin (evil wins)', function (t) {
     var testEmitter = newEmitter(),

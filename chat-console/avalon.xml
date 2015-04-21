@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- /*
+ * Copyright (c) 2011-2012 Google Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
+ */ -->
+
+<Module>
+  <ModulePrefs title="Yes/No/Maybe" height="100" width="550">
+  <Require feature="dynamic-height"/>
+  <Require feature="rpc"/>
+  <Require feature="views"/>
+</ModulePrefs>
+<Content type="html"><![CDATA[
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+    <script src="//plus.google.com/hangouts/_/api/v1/hangout.js"></script>
+  </head>
+  <body>
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+    <script>
+      var socket = io('https://166.78.6.23:3000');
+      $('form').submit(function(){
+        var command = $('#m').val(),
+                commandName = command.substring(0, command.indexOf(':')),
+                commandMsg = command.substring(command.indexOf(':')+1);
+
+        socket.emit(commandName, JSON.parse(commandMsg));
+        $('#m').val('');
+        return false;
+      });
+      function ClientSessionController(socket) {
+        this.socket = socket;
+        this.id = socket.id;
+      }
+
+      ClientSessionController.prototype._handleRegisterPlayerAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleCreateGameAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleJoinGameAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleStartGameAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleSelectQuesterAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleRemoveQuesterAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleSubmitQuestersAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleVoteAcceptRejectAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleVoteSuccessFailAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleTargetMerlinAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleAttemptKillMerlinAck = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleRegisterPlayerNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleCreateGameNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleJoinGameNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleStartGameNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleSelectQuesterNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleRemoveQuesterNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleSubmitQuestersNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleVoteAcceptRejectNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleVoteSuccessFailNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleTargetMerlinNack = function (msg) {
+      };
+
+      ClientSessionController.prototype._handleAttemptKillMerlinNack = function (msg) {
+      };
+
+      ClientSessionController.prototype.init = function () {
+        this.socket.on('registerPlayerAck', this._handleRegisterPlayerAck.bind(this));
+        this.socket.on('createGameAck', this._handleCreateGameAck.bind(this));
+        this.socket.on('joinGameAck', this._handleJoinGameAck.bind(this));
+        this.socket.on('startGameAck', this._handleStartGameAck.bind(this));
+        this.socket.on('selectQuesterAck', this._handleSelectQuesterAck.bind(this));
+        this.socket.on('removeQuesterAck', this._handleRemoveQuesterAck.bind(this));
+        this.socket.on('submitQuestersAck', this._handleSubmitQuestersAck.bind(this));
+        this.socket.on('voteAcceptRejectAck', this._handleVoteAcceptRejectAck.bind(this));
+        this.socket.on('voteSuccessFailAck', this._handleVoteSuccessFailAck.bind(this));
+        this.socket.on('targetMerlinAck', this._handleTargetMerlinAck.bind(this));
+        this.socket.on('killMerlinAttemptAck', this._handleAttemptKillMerlinAck.bind(this));
+
+
+        this.socket.on('registerPlayerNack', this._handleRegisterPlayerNack.bind(this));
+        this.socket.on('createGameNack', this._handleCreateGameNack.bind(this));
+        this.socket.on('joinGameNack', this._handleJoinGameNack.bind(this));
+        this.socket.on('startGameNack', this._handleStartGameNack.bind(this));
+        this.socket.on('selectQuesterNack', this._handleSelectQuesterNack.bind(this));
+        this.socket.on('removeQuesterNack', this._handleRemoveQuesterNack.bind(this));
+        this.socket.on('submitQuestersNack', this._handleSubmitQuestersNack.bind(this));
+        this.socket.on('voteAcceptRejectNack', this._handleVoteAcceptRejectNack.bind(this));
+        this.socket.on('voteSuccessFailNack', this._handleVoteSuccessFailNack.bind(this));
+        this.socket.on('targetMerlinNack', this._handleTargetMerlinNack.bind(this));
+        this.socket.on('killMerlinAttemptNack', this._handleAttemptKillMerlinNack.bind(this));
+
+        this.socket.on('registerPlayerAck', function(msg){ $('#messages').append($('<li>').text('registerPlayerAck' + JSON.stringify(msg)));});
+        this.socket.on('createGameAck', function(msg){ $('#messages').append($('<li>').text('createGameAck' + JSON.stringify(msg)));});
+        this.socket.on('joinGameAck', function(msg){ $('#messages').append($('<li>').text('joinGameAck' + JSON.stringify(msg)));});
+        this.socket.on('startGameAck', function(msg){ $('#messages').append($('<li>').text('startGameAck' + JSON.stringify(msg)));});
+        this.socket.on('selectQuesterAck', function(msg){ $('#messages').append($('<li>').text('selectQuesterAck' + JSON.stringify(msg)));});
+        this.socket.on('removeQuesterAck', function(msg){ $('#messages').append($('<li>').text('removeQuesterAck' + JSON.stringify(msg)));});
+        this.socket.on('submitQuestersAck', function(msg){ $('#messages').append($('<li>').text('submitQuestersAck' + JSON.stringify(msg)));});
+        this.socket.on('voteAcceptRejectAck', function(msg){ $('#messages').append($('<li>').text('voteAcceptRejectAck' + JSON.stringify(msg)));});
+        this.socket.on('voteSuccessFailAck', function(msg){ $('#messages').append($('<li>').text('voteSuccessFailAck' + JSON.stringify(msg)));});
+        this.socket.on('targetMerlinAck', function(msg){ $('#messages').append($('<li>').text('targetMerlinAck' + JSON.stringify(msg)));});
+        this.socket.on('killMerlinAttemptAck', function(msg){ $('#messages').append($('<li>').text('killMerlinAttemptAck' + JSON.stringify(msg)));});
+
+
+        this.socket.on('registerPlayerNack', function(msg){ $('#messages').append($('<li>').text('registerPlayerNack' + JSON.stringify(msg)));});
+        this.socket.on('createGameNack', function(msg){ $('#messages').append($('<li>').text('createGameNack' + JSON.stringify(msg)));});
+        this.socket.on('joinGameNack', function(msg){ $('#messages').append($('<li>').text('joinGameNack' + JSON.stringify(msg)));});
+        this.socket.on('startGameNack', function(msg){ $('#messages').append($('<li>').text('startGameNack' + JSON.stringify(msg)));});
+        this.socket.on('selectQuesterNack', function(msg){ $('#messages').append($('<li>').text('selectQuesterNack' + JSON.stringify(msg)));});
+        this.socket.on('removeQuesterNack', function(msg){ $('#messages').append($('<li>').text('removeQuesterNack' + JSON.stringify(msg)));});
+        this.socket.on('submitQuestersNack', function(msg){ $('#messages').append($('<li>').text('submitQuestersNack' + JSON.stringify(msg)));});
+        this.socket.on('voteAcceptRejectNack', function(msg){ $('#messages').append($('<li>').text('voteAcceptRejectNack' + JSON.stringify(msg)));});
+        this.socket.on('voteSuccessFailNack', function(msg){ $('#messages').append($('<li>').text('voteSuccessFailNack' + JSON.stringify(msg)));});
+        this.socket.on('targetMerlinNack', function(msg){ $('#messages').append($('<li>').text('targetMerlinNack' + JSON.stringify(msg)));});
+        this.socket.on('killMerlinAttemptNack', function(msg){ $('#messages').append($('<li>').text('killMerlinAttemptNack' + JSON.stringify(msg)));});
+
+
+
+        this.socket.on('playerRegistered', function(msg){ $('#messages').append($('<li>').text('playerRegistered' + JSON.stringify(msg)));});
+        this.socket.on('gameCreated', function(msg){ $('#messages').append($('<li>').text('gameCreated' + JSON.stringify(msg)));});
+        this.socket.on('gameJoined', function(msg){ $('#messages').append($('<li>').text('gameJoined' + JSON.stringify(msg)));});
+        this.socket.on('gameStarted', function(msg){ $('#messages').append($('<li>').text('gameStarted' + JSON.stringify(msg)));});
+        this.socket.on('questerSelected', function(msg){ $('#messages').append($('<li>').text('questerSelected' + JSON.stringify(msg)));});
+        this.socket.on('questerRemoved', function(msg){ $('#messages').append($('<li>').text('questerRemoved' + JSON.stringify(msg)));});
+        this.socket.on('questersSubmitted', function(msg){ $('#messages').append($('<li>').text('questersSubmitted' + JSON.stringify(msg)));});
+        this.socket.on('votedOnQuesters', function(msg){ $('#messages').append($('<li>').text('votedOnQuesters' + JSON.stringify(msg)));});
+        this.socket.on('questAccepted', function(msg){ $('#messages').append($('<li>').text('questAccepted' + JSON.stringify(msg)));});
+        this.socket.on('questRejected', function(msg){ $('#messages').append($('<li>').text('questRejected' + JSON.stringify(msg)));});
+        this.socket.on('votedOnSuccessFail', function(msg){ $('#messages').append($('<li>').text('votedOnSuccessFail' + JSON.stringify(msg)));});
+        this.socket.on('questEnded', function(msg){ $('#messages').append($('<li>').text('questEnded' + JSON.stringify(msg)));});
+        this.socket.on('killMerlinStage', function(msg){ $('#messages').append($('<li>').text('killMerlinStage' + JSON.stringify(msg)));});
+        this.socket.on('merlinTargeted', function(msg){ $('#messages').append($('<li>').text('merlinTargeted' + JSON.stringify(msg)));});
+        this.socket.on('killMerlinAttempted', function(msg){ $('#messages').append($('<li>').text('killMerlinAttempted' + JSON.stringify(msg)));});
+
+      };
+      var clientSessionController = new ClientSessionController(socket);
+      clientSessionController.init();
+    </script>
+  </body>
+</html>
+
+]]></Content>
+</Module>
+

@@ -6,12 +6,23 @@
 *.exe
 *.o
 *.so
+
+# Client / Server #
+###################
 node_modules
+public
+.tmp
+.idea
+client/bower_components
+dist
+/server/config/local.env.js
+
 .flooignore
 .floo
 .idea/dictionaries/
 .idea/workspace.xml
 .idea/codeStyleSettings.xml
+
 # Packages #
 ############
 # it's better to unpack these files and commit the raw source

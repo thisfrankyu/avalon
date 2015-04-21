@@ -1,0 +1,16 @@
+<div class="modal-header">
+  <button type="button" class="close" aria-label="Close" ng-click="$close()"><span aria-hidden="true">&times;</span></button>
+  <h3 class="modal-title">Game Over</h3>
+</div>
+<div class="modal-body" ng-class="{'bg-success': stage === 'GOOD_WINS', 'bg-danger': stage === 'BAD_WINS'}">
+  <div class="container-fluid">
+    <div ng-switch="stage" class="text-center">
+      <h1 ng-switch-when="BAD_WINS">Minions of Mordred win!</h1>
+      <h1 ng-switch-when="GOOD_WINS">Followers of Arthur win!</h1>
+    </div>
+  </div>
+</div>
+<div class="modal-footer">
+  <button class="btn btn-default" ng-click="createGame()">Create New Game</button>
+  <button class="btn btn-primary" ng-click="joinGame()">Join Another Game</button>
+</div>

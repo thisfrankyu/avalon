@@ -1,7 +1,3 @@
-/**
- * Created by frank on 1/31/15.
- */
-
 function Player(id) {
     this.id = id;
     this.role = null;

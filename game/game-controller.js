@@ -1,6 +1,3 @@
-/**
- * Created by frank on 2/1/15.
- */
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -12,10 +9,11 @@ var Player = require('./player');
 var Game = engine.Game;
 var STAGES = engine.STAGES;
 var QUEST_STATE = require('./quest').QUEST_STATE;
+var RULES = require('./rules');
+var FilteredGameView = require('./filtered-game-view').FilteredGameView;
 
 function GameController(emitter) {
     this.emitter = emitter;
-    this.sessions = {}; //sessionId --> session
     this.players = {}; //playerId --> player
     this.games = {}; //gameId --> game
 }
@@ -68,8 +66,10 @@ GameController.prototype._handleCreateGame = function (msg) {
     var gameCreatedMsg = {
         gameId: game.id,
         ownerId: game.ownerId,
-        badSpecialRoles: game.badSpecialRoles,
-        goodSpecialRoles: game.goodSpecialRoles,
+        gameOptions: {
+            badSpecialRoles: game.badSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles
+        },
         gameFromController: this.games[game.id]
     };
     if (msg.callback) msg.callback(null, gameCreatedMsg);
@@ -91,11 +91,30 @@ GameController.prototype._handleJoinGame = function (msg) {
         ownerId: game.ownerId,
         joinedPlayerId: msg.playerId,
         players: game.players,
-        badSpecialRoles: game.badSpecialRoles,
-        goodSpecialRoles: game.goodSpecialRoles
+        gameOptions: {
+            badSpecialRoles: game.badSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles
+        }
     };
     if (msg.callback) msg.callback(null, gameJoinedMsg);
     this.emitter.emit('gameJoined', gameJoinedMsg);
+};
+
+GameController.prototype._getFilteredGameView = function (gameId) {
+    var game = this.games[gameId];
+    this._validateGame(gameId);
+    return new FilteredGameView(game);
+};
+
+GameController.prototype._handleGetFilteredGameView = function (msg) {
+    var filteredGameView = this.exec(this._getFilteredGameView.bind(this, msg.gameId)),
+        filteredGameViewMsg = {
+            gameId: msg.gameId,
+            player: this.players[msg.playerId],
+            filteredGameView: filteredGameView
+        };
+    if (msg.callback) msg.callback(null, filteredGameViewMsg);
+    this.emitter.emit('filteredGameView', filteredGameViewMsg);
 };
 
 GameController.prototype._startGame = function (gameId, playerId) {
@@ -120,8 +139,14 @@ GameController.prototype._handleStartGame = function (msg) {
     var gameStartedMsg = {
         gameId: gameId,
         players: game.players,
-        badSpecialRoles: game.badSpecialRoles,
-        goodSpecialRoles: game.goodSpecialRoles
+        playerOrder: game.playerOrder,
+        kingIndex: game.kingIndex,
+        quests: game.quests,
+        gameOptions: {
+            badSpecialRoles: game.badSpecialRoles,
+            goodSpecialRoles: game.goodSpecialRoles
+        },
+        filteredGameView: new FilteredGameView(game)
     };
     if (msg.callback) msg.callback(null, gameStartedMsg);
     this.emitter.emit('gameStarted', gameStartedMsg);
@@ -136,12 +161,14 @@ GameController.prototype._selectQuester = function (playerId, requestingPlayerId
 GameController.prototype._handleSelectQuester = function (msg) {
     var playerId = msg.playerId,
         requestingPlayerId = msg.requestingPlayerId,
-        gameId = msg.gameId;
+        gameId = msg.gameId,
+        game = this.games[gameId];
     if (!this.exec(this._selectQuester.bind(this, playerId, requestingPlayerId, gameId), msg.callback)) return;
     var questerSelectedMsg = {
         gameId: gameId,
         selectedQuesterId: playerId,
-        requestingPlayerId: requestingPlayerId
+        requestingPlayerId: requestingPlayerId,
+        filteredGameView: new FilteredGameView(game)
     };
     if (msg.callback) msg.callback(null, questerSelectedMsg);
     this.emitter.emit('questerSelected', questerSelectedMsg);
@@ -156,13 +183,15 @@ GameController.prototype._removeQuester = function (playerId, requestingPlayerId
 GameController.prototype._handleRemoveQuester = function (msg) {
     var playerId = msg.playerId,
         requestingPlayerId = msg.requestingPlayerId,
-        gameId = msg.gameId;
+        gameId = msg.gameId,
+        game = this.games[gameId];
     if (!this.exec(this._removeQuester.bind(this, playerId, requestingPlayerId, gameId), msg.callback)) return;
 
     var questerRemovedMsg = {
         gameId: gameId,
         removedQuesterId: playerId,
-        requestingPlayerId: requestingPlayerId
+        requestingPlayerId: requestingPlayerId,
+        filteredGameView: new FilteredGameView(game)
     };
     if (msg.callback) msg.callback(null, questerRemovedMsg);
     this.emitter.emit('questerRemoved', questerRemovedMsg);
@@ -172,12 +201,17 @@ GameController.prototype._submitQuesters = function (playerId, gameId, callback)
     var game = this.games[gameId];
     this._validateGame(gameId);
     game.submitQuestersForVoting(playerId);
+    var filteredGameView = new FilteredGameView(game);
     var questersSubmittedMsg = {
         gameId: gameId,
-        selectedQuesters: game.currentQuest().selectedQuesters
+        selectedQuesters: game.currentQuest().selectedQuesters,
+        filteredGameView: filteredGameView
     };
     if (callback) callback(questersSubmittedMsg);
     this.emitter.emit('questersSubmitted', questersSubmittedMsg);
+    this.emitter.emit('stageChanged', {
+        filteredGameView: filteredGameView
+    });
 };
 
 GameController.prototype._handleSubmitQuesters = function (msg) {
@@ -189,31 +223,43 @@ GameController.prototype._handleSubmitQuesters = function (msg) {
 
 GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, callback) {
     var game = this.games[gameId],
-        result;
+        result, filteredGameView;
     this._validateGame(gameId);
     result = game.voteAcceptReject(playerId, vote);
 
     var votedOnQuestersMsg = {
         gameId: gameId,
         playerId: playerId,
-        vote: vote
+        vote: vote,
+        filteredGameView: new FilteredGameView(game)
     };
     this.emitter.emit('votedOnQuesters', votedOnQuestersMsg);
     if (callback) callback(null, votedOnQuestersMsg);
 
     if (result.stage === STAGES.QUEST) {
+        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questAccepted', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
-            votes: result.votes
+            votes: result.votes,
+            filteredGameView: filteredGameView
+        });
+        this.emitter.emit('stageChanged', {
+            filteredGameView: filteredGameView
         });
     }
     if (result.stage === STAGES.SELECT_QUESTERS) {
+        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questRejected', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             numRejections: game.currentQuest().numRejections,
-            votes: result.votes
+            votes: result.votes,
+            filteredGameView: filteredGameView
+        });
+
+        this.emitter.emit('stageChanged', {
+            filteredGameView: filteredGameView
         });
     }
     // TODO: what to do when game ends
@@ -235,25 +281,41 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
     var votedOnSuccessFailMsg = {
         gameId: gameId,
         playerId: playerId,
-        vote: vote
+        vote: vote,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(null, votedOnSuccessFailMsg);
     this.emitter.emit('votedOnSuccessFail', votedOnSuccessFailMsg);
     if (result.voteResult !== QUEST_STATE.UNDECIDED) {
-        if (result.stage === STAGES.KILL_MERLIN) {
-            this.emitter.emit('killMerlinStage', {
-                gameId: gameId,
-                stage: result.stage
-            });
-        }
-        this.emitter.emit('questEnded', {
+        var questEndedMsg = {
             gameId: gameId,
             votes: result.votes,
             questResult: result.voteResult,
             questIndex: result.questIndex,
             nextQuest: game.currentQuest(),
-            stage: result.stage
-        });
+            stage: result.stage,
+            filteredGameView: new FilteredGameView(game)
+        };
+        this.emitter.emit('questEnded', questEndedMsg);
+        if (result.stage === STAGES.KILL_MERLIN) {
+            var goodPlayerIds = _.filter(_.keys(game.players), function (playerId) {
+                    return _.has(RULES.GOOD_ROLES, game.players[playerId].role);
+                }),
+                assassinInGame = _.contains(game.badSpecialRoles, RULES.BAD_ROLES.ASSASSIN);
+
+            this.emitter.emit('killMerlinStage', {
+                gameId: gameId,
+                stage: result.stage,
+                goodPlayerIds: goodPlayerIds,
+                assassinInGame: assassinInGame,
+                filteredGameView: new FilteredGameView(game)
+            });
+
+            this.emitter.emit('stageChanged', {
+                filteredGameView: new FilteredGameView(game)
+            });
+        }
+
     }
 };
 
@@ -274,7 +336,8 @@ GameController.prototype._targetMerlin = function (targetId, requestingPlayerId,
     msg = {
         targetId: targetId,
         requestingPlayerId: requestingPlayerId,
-        gameId: gameId
+        gameId: gameId,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(null, msg);
     this.emitter.emit('merlinTargeted', msg);
@@ -296,7 +359,8 @@ GameController.prototype._attemptKillMerlin = function (requestingPlayerId, game
     msg = {
         requestingPlayerId: requestingPlayerId,
         gameId: gameId,
-        stage: game.stage
+        stage: game.stage,
+        filteredGameView: new FilteredGameView(game)
     };
     if (callback) callback(null, msg);
     this.emitter.emit('killMerlinAttempted', msg);
@@ -316,6 +380,7 @@ GameController.prototype.init = function () {
     this.emitter.on('createGame', self._handleCreateGame.bind(self));
     this.emitter.on('joinGame', self._handleJoinGame.bind(self));
     this.emitter.on('startGame', self._handleStartGame.bind(self));
+    this.emitter.on('getFilteredGameView', self._handleGetFilteredGameView.bind(self));
     this.emitter.on('selectQuester', self._handleSelectQuester.bind(self));
     this.emitter.on('removeQuester', self._handleRemoveQuester.bind(self));
     this.emitter.on('submitQuesters', self._handleSubmitQuesters.bind(self));

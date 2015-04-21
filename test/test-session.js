@@ -11,7 +11,25 @@ var Player = require('../game/player');
 
 function Socket(id) {
     this.id = id;
+    this.handshake = {
+        signedCookies: {
+            'connect.sid': id
+        }
+    };
+    this.connected = true;
 }
+
+function SessionSockets(io) {
+
+    this.io = io;
+    this.on = function (event, callback) {
+        this.io.on(event, callback);
+    }
+    this.emit = function (event, err, socket) {
+        io.emit(event, err, socket);
+    }
+}
+
 util.inherits(Socket, EventEmitter);
 
 test('test connect to session', function (t) {
@@ -19,7 +37,8 @@ test('test connect to session', function (t) {
         testEmitter = newEmitter(),
         io = new Socket('io'),
         socket = new Socket(sessionId),
-        sessionController = new SessionController(testEmitter, io);
+        sessionSockets = new SessionSockets(io),
+        sessionController = new SessionController(testEmitter, io, sessionSockets);
     sessionController.init();
     socket.once('hi', function () {
         t.ok(true, 'socket should have emitted hi upon io getting connection');
@@ -27,7 +46,7 @@ test('test connect to session', function (t) {
             'make sure that the session was registered with the sessionController');
         t.end();
     });
-    io.emit('connection', socket);
+    sessionSockets.emit('connection', null, socket);
 });
 
 test('test register player', function (t) {
@@ -37,13 +56,14 @@ test('test register player', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         socket1 = new Socket('sessionSocket1'),
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io),
+        sessionController = new SessionController(testEmitter, io, sessionSockets),
         session;
 
     t.plan(6);
     sessionController.init();
-    io.emit('connection', socket);
-    io.emit('connection', socket1);
+    sessionSockets.emit('connection', null, socket);
+    sessionSockets.emit('connection', null, socket1);
     errorOnce('registerPlayer', testEmitter, socket, t, {playerId: 'playerX'});
     socket.on('registerPlayerAck', function (msg) {
         if (_.has(msg, 'sessionId')) {
@@ -78,6 +98,46 @@ test('test register player', function (t) {
 });
 
 
+test('test re-register player', function (t) {
+    var sessionId = 'sessionSocket0',
+        playerId = 'player0',
+        testEmitter = newEmitter(),
+        io = new Socket('io'),
+        socket = new Socket(sessionId),
+        socket1 = new Socket('sessionSocket1'),
+        sessionSockets = new SessionSockets(io),
+        sessionController = new SessionController(testEmitter, io, sessionSockets),
+        session;
+
+    sessionController.init();
+    sessionSockets.emit('connection', null, socket);
+    sessionSockets.emit('connection', null, socket1);
+    socket.on('registerPlayerAck', function (msg) {
+        if (_.has(msg, 'sessionId')) {
+            session = sessionController.sessions[sessionId];
+            t.equal(session.playerId, playerId,
+                'make sure that ' + playerId + ' was successfully registered in session controller');
+        }
+    });
+    testEmitter.once('registerPlayer', function (msg) {
+        var response = {playerId: msg.playerId};
+        msg.callback(null, response);
+        testEmitter.emit('playerRegistered', response);
+    });
+    socket.emit('registerPlayer', {playerId: playerId});
+
+
+    socket.connected = false;
+    var newSocket = new Socket(sessionId);
+    newSocket.once('hi', function (sessionSocketId) {
+        t.equal(sessionSocketId, sessionId, 'make sure new socket gets hi');
+        t.end();
+    });
+    sessionSockets.emit('connection', null, newSocket);
+
+});
+
+
 test('test create game', function (t) {
     var sessionId = 'sessionSocket0',
         playerId = 'player0',
@@ -87,11 +147,11 @@ test('test create game', function (t) {
         testEmitter = newEmitter(),
         io = new Socket('io'),
         socket = new Socket(sessionId),
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         session;
 
     sessionController.init();
-    io.emit('connection', socket);
+    sessionSockets.emit('connection', null, socket);
     testEmitter.on('registerPlayer', function (msg) {
         var response = {playerId: msg.playerId};
         msg.callback(null, response);
@@ -157,12 +217,12 @@ test('test join game', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         socket1 = new Socket(sessionId1),
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         players = [];
 
     sessionController.init();
-    io.emit('connection', socket);
-    io.emit('connection', socket1);
+    sessionSockets.emit('connection', null, socket);
+    sessionSockets.emit('connection', null, socket1);
     testEmitter.on('registerPlayer', function (msg) {
         var response = {playerId: msg.playerId};
         msg.callback(null, response);
@@ -187,8 +247,10 @@ test('test join game', function (t) {
             ownerId: ownerId,
             joinedPlayerId: msg.playerId,
             players: players,
-            badSpecialRoles: badSpecialRoles,
-            goodSpecialRoles: goodSpecialRoles
+            gameOptions: {
+                badSpecialRoles: badSpecialRoles,
+                goodSpecialRoles: goodSpecialRoles
+            }
         };
         msg.callback(null, response);
         testEmitter.emit('gameJoined', response);
@@ -200,8 +262,10 @@ test('test join game', function (t) {
             ownerId: ownerId,
             joinedPlayerId: player1,
             players: [playerId, player1],
-            badSpecialRoles: badSpecialRoles,
-            goodSpecialRoles: goodSpecialRoles,
+            gameOptions: {
+                badSpecialRoles: badSpecialRoles,
+                goodSpecialRoles: goodSpecialRoles
+            },
             sessionId: sessionId1
         }, 'make sure ' + player1 + ' joins the game correctly');
     });
@@ -243,10 +307,10 @@ test('test start game', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         sockets = [socket],
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         players = [];
     sessionController.init();
-    io.emit('connection', socket);
+    sessionSockets.emit('connection', null, socket);
     testEmitter.on('registerPlayer', function (msg) {
         var response = {playerId: msg.playerId};
         msg.callback(null, response);
@@ -290,7 +354,7 @@ test('test start game', function (t) {
     _.times(6, function (n) {
         var i = n + 1;
         sockets.push(new Socket('sessionSocket' + i));
-        io.emit('connection', sockets[i]);
+        sessionSockets.emit('connection', null, sockets[i]);
         sockets[i].emit('registerPlayer', {playerId: 'player' + i});
         sockets[i].emit('joinGame', {gameId: gameId, playerId: 'player' + i});
     });
@@ -304,8 +368,10 @@ test('test start game', function (t) {
         var response = {
             gameId: gameId,
             players: playersMap,
-            badSpecialRoles: badSpecialRoles,
-            goodSpecialRoles: goodSpecialRoles
+            gameOptions: {
+                goodSpecialRoles: goodSpecialRoles,
+                badSpecialRoles: badSpecialRoles
+            }
         };
         msg.callback(null, response);
         testEmitter.emit('gameStarted', response);
@@ -315,8 +381,10 @@ test('test start game', function (t) {
         t.deepEqual(msg, {
                 gameId: gameId,
                 players: players,
-                badSpecialRoles: badSpecialRoles,
-                goodSpecialRoles: goodSpecialRoles,
+                gameOptions: {
+                    goodSpecialRoles: goodSpecialRoles,
+                    badSpecialRoles: badSpecialRoles
+                },
                 sessionId: sessionId
             },
             'make sure game is started with all the right players and roles');
@@ -338,9 +406,9 @@ test('test select and remove questers', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         sockets = [socket],
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         players = [];
-    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets);
     testEmitter.once('error', function (error) {
         t.equal(error.message, 'error on selectQuester',
             'make sure error on selectQuester gets emitted');
@@ -419,13 +487,13 @@ test('test voteAcceptReject', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         sockets = [socket],
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         players = [],
         selectedQuesters = [],
         votes = {};
 
     t.plan(18);
-    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets);
     testEmitter.on('selectQuester', function (msg) {
         var response = {
             gameId: msg.gameId,
@@ -441,7 +509,8 @@ test('test voteAcceptReject', function (t) {
     testEmitter.once('submitQuesters', function (msg) {
         var response = {
             gameId: gameId,
-            selectedQuesters: [playerId, player1]
+            selectedQuesters: [playerId, player1],
+            filteredGameView: {gameId: msg.gameId}
         };
         msg.callback(null, response);
         testEmitter.emit('questersSubmitted', response);
@@ -506,6 +575,42 @@ test('test voteAcceptReject', function (t) {
     });
 });
 
+test('test reconnect', function (t) {
+    var sessionId = 'sessionSocket0',
+        playerId = 'player0',
+        ownerId = playerId,
+        player1 = 'player1',
+        gameId = 'game0',
+        goodSpecialRoles = ['MERLIN', 'PERCIVAL'],
+        badSpecialRoles = ['MORGANA', 'MORDRED'],
+        testEmitter = newEmitter(),
+        io = new Socket('io'),
+        socket = new Socket(sessionId),
+        newSocket = new Socket(sessionId),
+        sockets = [socket],
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
+        players = [],
+        selectedQuesters = [playerId, player1],
+        votes = {};
+
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets);
+    testEmitter.once('getFilteredGameView', function (msg) {
+        msg.callback(new Error('some error'), {gameId: gameId, player: {id: playerId}});
+    });
+    sessionSockets.emit('connection', null, socket);
+    testEmitter.once('getFilteredGameView', function (msg) {
+        t.equal(msg.playerId, playerId, 'make sure reconnecting playerId is the same');
+        t.equal(msg.gameId, gameId, 'make sure reconnecting gameId is the same');
+        msg.callback(null, {gameId: gameId, player: {id: playerId}});
+    });
+    newSocket.on('reconnect', function (msg) {
+        t.equal(msg.gameId, gameId, 'make sure reconnect message was sent and received correctly');
+        t.equal(msg.playerId, playerId, 'make sure reconnect message was sent and received correctly');
+        t.end();
+    });
+    sessionSockets.emit('connection', null, newSocket);
+
+});
 
 test('test voteSuccessFail', function (t) {
     var sessionId = 'sessionSocket0',
@@ -519,12 +624,12 @@ test('test voteSuccessFail', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         sockets = [socket],
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         players = [],
         selectedQuesters = [playerId, player1],
         votes = {};
 
-    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets);
     errorOnce('voteSuccessFail', testEmitter, socket, t, {gameId: gameId, playerId: playerId, vote: 2});
     testEmitter.on('voteSuccessFail', function (msg) {
         var response = {gameId: gameId, playerId: msg.playerId, vote: msg.vote};
@@ -589,12 +694,12 @@ test('test voteSuccessFail', function (t) {
         io = new Socket('io'),
         socket = new Socket(sessionId),
         sockets = [socket],
-        sessionController = new SessionController(testEmitter, io),
+        sessionSockets = new SessionSockets(io), sessionController = new SessionController(testEmitter, io, sessionSockets),
         players = [],
         selectedQuesters = [playerId, player1],
         votes = {};
 
-    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets);
+    initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets);
     errorOnce('targetMerlin', testEmitter, socket, t, {
         gameId: gameId,
         requestingPlayerId: playerId,
@@ -641,9 +746,9 @@ test('test voteSuccessFail', function (t) {
     socket.emit('killMerlin', {gameId: gameId});
 });
 
-function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets) {
+function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets) {
     sessionController.init();
-    io.emit('connection', socket);
+    sessionSockets.emit('connection', null, socket);
     testEmitter.on('registerPlayer', function (msg) {
         var response = {playerId: msg.playerId};
         msg.callback(null, response);
@@ -686,7 +791,7 @@ function initGame(sessionController, io, socket, testEmitter, players, ownerId, 
     _.times(6, function (n) {
         var i = n + 1;
         sockets.push(new Socket('sessionSocket' + i));
-        io.emit('connection', sockets[i]);
+        sessionSockets.emit('connection', null, sockets[i]);
         sockets[i].emit('registerPlayer', {playerId: 'player' + i});
         sockets[i].emit('joinGame', {gameId: gameId, playerId: 'player' + i});
     });
