@@ -27,14 +27,24 @@ var newEmitter = require('../communication/emitter').newEmitter;
 var server = https.createServer(credentials, app);
 var io = require('socket.io')(server);
 
-require('./config/express')(app);
+var cookieParser = require('cookie-parser');
+var expressSession = require('express-session');
+
+var myCookieParser = cookieParser(config.secrets.session);
+var sessionStore = new expressSession.MemoryStore();
+
+require('./config/express')(app, sessionStore, myCookieParser);
 require('./routes')(app);
+
+var SessionSockets = require('session.socket.io'),
+    sessionSockets = new SessionSockets(io, sessionStore, myCookieParser);
 
 app.get('/avalon.xml', function(req, res){
   res.sendFile(app.get('appPath') + '/avalon.xml');
 });
+
 var emitter = newEmitter();
-var sessionController = new SessionController(emitter, io);
+var sessionController = new SessionController(emitter, io, sessionSockets);
 var gameController = new GameController(emitter);
 sessionController.init();
 gameController.init();

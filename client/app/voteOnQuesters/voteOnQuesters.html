@@ -1,8 +1,8 @@
 <div ng-controller="VoteOnQuestersCtrl">
   <ul id="voteOnQuestersCheckboxes" class="list-group">
     <li class="list-group-item text-center" ng-repeat="playerId in game.state.playerOrder">
-      <checkbox ng-disabled="true" ng-model="voted[playerId]" name="{{playerId}}Voted"
-                ng-class="{'btn-success': votes[playerId] === 1, 'btn-danger': votes[playerId] === -1}"></checkbox>
+      <checkbox ng-disabled="true" ng-model="hasVoted(playerId)" ng-model-options="{getterSetter:true}" name="{{playerId}}Voted"
+                ng-class="{'btn-success': getVote(playerId) === 1, 'btn-danger': getVote(playerId) === -1}"></checkbox>
     </li>
   </ul>
 </div>

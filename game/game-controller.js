@@ -100,6 +100,23 @@ GameController.prototype._handleJoinGame = function (msg) {
     this.emitter.emit('gameJoined', gameJoinedMsg);
 };
 
+GameController.prototype._getFilteredGameView = function (gameId) {
+    var game = this.games[gameId];
+    this._validateGame(gameId);
+    return new FilteredGameView(game);
+};
+
+GameController.prototype._handleGetFilteredGameView = function (msg) {
+    var filteredGameView = this.exec(this._getFilteredGameView.bind(this, msg.gameId)),
+        filteredGameViewMsg = {
+            gameId: msg.gameId,
+            player: this.players[msg.playerId],
+            filteredGameView: filteredGameView
+        };
+    if (msg.callback) msg.callback(null, filteredGameViewMsg);
+    this.emitter.emit('filteredGameView', filteredGameViewMsg);
+};
+
 GameController.prototype._startGame = function (gameId, playerId) {
     var game = this.games[gameId];
     this._validateGame(gameId);
@@ -184,13 +201,17 @@ GameController.prototype._submitQuesters = function (playerId, gameId, callback)
     var game = this.games[gameId];
     this._validateGame(gameId);
     game.submitQuestersForVoting(playerId);
+    var filteredGameView = new FilteredGameView(game);
     var questersSubmittedMsg = {
         gameId: gameId,
         selectedQuesters: game.currentQuest().selectedQuesters,
-        filteredGameView: new FilteredGameView(game)
+        filteredGameView: filteredGameView
     };
     if (callback) callback(questersSubmittedMsg);
     this.emitter.emit('questersSubmitted', questersSubmittedMsg);
+    this.emitter.emit('stageChanged', {
+        filteredGameView: filteredGameView
+    });
 };
 
 GameController.prototype._handleSubmitQuesters = function (msg) {
@@ -202,7 +223,7 @@ GameController.prototype._handleSubmitQuesters = function (msg) {
 
 GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, callback) {
     var game = this.games[gameId],
-        result;
+        result, filteredGameView;
     this._validateGame(gameId);
     result = game.voteAcceptReject(playerId, vote);
 
@@ -216,20 +237,29 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
     if (callback) callback(null, votedOnQuestersMsg);
 
     if (result.stage === STAGES.QUEST) {
+        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questAccepted', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             votes: result.votes,
-            filteredGameView: new FilteredGameView(game)
+            filteredGameView: filteredGameView
+        });
+        this.emitter.emit('stageChanged', {
+            filteredGameView: filteredGameView
         });
     }
     if (result.stage === STAGES.SELECT_QUESTERS) {
+        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questRejected', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             numRejections: game.currentQuest().numRejections,
             votes: result.votes,
-            filteredGameView: new FilteredGameView(game)
+            filteredGameView: filteredGameView
+        });
+
+        this.emitter.emit('stageChanged', {
+            filteredGameView: filteredGameView
         });
     }
     // TODO: what to do when game ends
@@ -280,7 +310,12 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
                 assassinInGame: assassinInGame,
                 filteredGameView: new FilteredGameView(game)
             });
+
+            this.emitter.emit('stageChanged', {
+                filteredGameView: new FilteredGameView(game)
+            });
         }
+
     }
 };
 
@@ -345,6 +380,7 @@ GameController.prototype.init = function () {
     this.emitter.on('createGame', self._handleCreateGame.bind(self));
     this.emitter.on('joinGame', self._handleJoinGame.bind(self));
     this.emitter.on('startGame', self._handleStartGame.bind(self));
+    this.emitter.on('getFilteredGameView', self._handleGetFilteredGameView.bind(self));
     this.emitter.on('selectQuester', self._handleSelectQuester.bind(self));
     this.emitter.on('removeQuester', self._handleRemoveQuester.bind(self));
     this.emitter.on('submitQuesters', self._handleSubmitQuesters.bind(self));

@@ -5,31 +5,21 @@ angular.module('avalonApp')
   .controller('SelectQuestersCtrl', function ($rootScope, $scope, socket, $location, game, player) {
     $scope.game = game;
     $scope.player = player;
+    updateSelected();
 
-    function init(){
+    function updateSelected() {
       $scope.questers = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = false;
+        memo[playerId] = _.contains(game.state.currentQuest().selectedQuesters, playerId);
         return memo;
       }, {});
-      socket.removeAllListeners('questerSelected');
-      socket.removeAllListeners('questerRemoved');
-
-      if (player.state.id !== game.state.playerOrder[game.state.kingIndex]) {
-          socket.on('questerSelected', function (msg) {
-        $scope.questers[msg.selectedQuesterId] = true;
-      });
-          socket.on('questerRemoved', function (msg) {
-        $scope.questers[msg.removedQuesterId] = false;
-      });
-      }
     }
 
-    init();
 
-    socket.on('questersSubmitted', function(msg) {
-      game.state.currentQuest().selectedQuesters = msg.selectedQuesters;
-      game.state.stage = game.STAGES.VOTE_ON_QUESTERS;
-      $rootScope.$broadcast('stateChanged', game.state.stage);
+    $rootScope.$on('gameUpdated', function (scope, msg) {
+      if (game.state.stage !== game.STAGES.SELECT_QUESTERS) {
+        return;
+      }
+      updateSelected();
     });
 
     function selectQuester(selectedQuesterId) {
@@ -67,17 +57,17 @@ angular.module('avalonApp')
     };
 
 
-
-
-    $scope.submitQuesters = function() {
+    $scope.submitQuesters = function () {
       socket.emit('submitQuesters', {
         gameId: game.state.id
       });
     };
 
-    $rootScope.$on('stateChanged', function (scope, msg) {
-      if(msg !== game.STAGES.SELECT_QUESTERS) { return; }
-      init();
+    $rootScope.$on('stageChanged', function (scope, msg) {
+      if (msg !== game.STAGES.SELECT_QUESTERS) {
+        return;
+      }
+      updateSelected();
     });
 
   });

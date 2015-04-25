@@ -1,4 +1,6 @@
 var _ = require('underscore');
+var STAGES = require('./engine').STAGES;
+var RULES = require('./rules');
 
 /**
  * An object representing a game state, filtered to not include sensitive information.
@@ -19,8 +21,16 @@ function FilteredGameView(game) {
     this.goodSpecialRoles = game.goodSpecialRoles;
     this.badSpecialRoles = game.badSpecialRoles;
     this.kingIndex = game.kingIndex;
-    this.playerOrder= game.playerOrder;
+    this.playerOrder = game.playerOrder;
+    this.players = _.pluck(game.players, 'id');
     this.targetedMerlin = game.targetedMerlin;
+    this.goodPlayerIds = game.stage === STAGES.KILL_MERLIN ? this._generateGoodPlayerIds(game) : null;
+}
+
+FilteredGameView.prototype._generateGoodPlayerIds = function (game) {
+    return _.filter(_.keys(game.players), function (playerId) {
+        return _.has(RULES.GOOD_ROLES, game.players[playerId].role);
+    });
 }
 
 exports.FilteredGameView = FilteredGameView;

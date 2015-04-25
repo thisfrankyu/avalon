@@ -1,52 +1,43 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('VoteOnQuestersCtrl', function ($scope, $rootScope, $location, $modal, game, player, socket) {
+  .controller('VoteOnQuestersCtrl', function ($scope, $rootScope, $location, $modal, game, player) {
+    var modal;
     $scope.game = game;
-    function init(){
-      $scope.voted = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = false;
-        return memo;
-      }, {});
-      $scope.votes = _.reduce(game.state.playerOrder, function (memo, playerId) {
-        memo[playerId] = 0;
-        return memo;
-      }, {});
-    }
-    init();
-    socket.on('votedOnQuesters', function (msg) {
-      $scope.voted[msg.playerId] = true;
-    });
-    socket.on('questRejected', function (msg) {
-      console.log(msg);
-      $scope.votes = msg.votes;
-      game.state.currentQuest().numRejections++;
-      game.state.kingIndex = (game.state.kingIndex + 1) % game.state.playerOrder.length;
-      game.state.stage = game.STAGES.SELECT_QUESTERS;
-      $rootScope.$broadcast('stateChanged', game.state.stage);
-    });
-    socket.on('questAccepted', function (msg) {
-      console.log(msg);
-      $scope.votes = msg.votes;
-      //TODO: need to display vote values and who voted accept or reject
-      game.state.stage = game.STAGES.QUEST;
-      $rootScope.$broadcast('stateChanged', game.state.stage);
-    });
+
+    $scope.hasVoted = function(playerId) {
+      return _.has(game.state.currentQuest().votesOnQuest, playerId);
+    };
+
+    $scope.getVote = function(playerId) {
+      if (game.state.stage === game.STAGES.VOTE_ON_QUESTERS || !$scope.hasVoted(playerId)) {
+        return 0;
+      }
+      return game.state.currentQuest().votesOnQuest[playerId];
+    };
 
     function openVoteModal() {
-      $modal.open({
+      return $modal.open({
         templateUrl: 'app/voteOnQuesters/voteOnQuesters.modal.html',
         controller: 'VoteOnQuestersModalCtrl',
         size: 'sm',
         backdrop: 'static',
+        keyboard: false,
         resolve: {}
       });
     }
 
-    $rootScope.$on('stateChanged', function (scope, msg) {
-      if (msg === game.STAGES.VOTE_ON_QUESTERS) {
-        init();
-        openVoteModal();
+    //$rootScope.$on('gameUpdated', function (scope, msg) { });
+
+    $rootScope.$on('stageChanged', function (scope, msg) {
+      if (msg !== game.STAGES.VOTE_ON_QUESTERS){
+        if (modal) {
+          modal.dismiss();
+        }
+        return;
+      }
+      if (!$scope.hasVoted(player.state.id)) {
+        modal = openVoteModal();
       }
     });
   });
