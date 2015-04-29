@@ -9,6 +9,12 @@ var GameViewPage = function(browser) {
     return browser.element(by.name('player'+index));
   }
 
+  this.getByBinding = function (bindingText) {
+    return browser.element(by.binding(bindingText));
+  };
+
+
+
   this.submitQuestersButton = browser.element(by.buttonText('Submit Questers'));
 
   this.acceptQuestersButton = browser.element(by.buttonText('ACCEPT'));
