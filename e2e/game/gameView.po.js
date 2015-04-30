@@ -7,7 +7,7 @@ var GameViewPage = function(browser) {
 
   this.getSelectPlayerCheckBox = function (index) {
     return browser.element(by.name('player'+index));
-  }
+  };
 
   this.getByBinding = function (bindingText) {
     return browser.element(by.binding(bindingText));
