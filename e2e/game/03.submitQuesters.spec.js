@@ -29,59 +29,57 @@ function startGame(page, ownerId, gameId, browsers) {
   return page;
 }
 function selectQuesters(browsers, numQuesters, i) {
+  var currentKingPage = null;
   _.each(browsers, function (aBrowser) {
     var gameViewPage = new GameViewPage(aBrowser);
     gameViewPage.submitQuestersButton.isPresent().then(function (isCurrentKing) {
       if (!isCurrentKing) return;
-      console.log('king is browser', i);
+      currentKingPage = gameViewPage;
       _.times(numQuesters[i], function (x) {
         // TODO: move to page object
-        console.log('clicking checkbox' + x);
         gameViewPage.getSelectPlayerCheckBox(x).click();
-      });
 
+      });
+      gameViewPage.submitQuestersButton.click();
     });
   });
-
 }
-describe('select questers', function () {
+
+
+describe('submit questers', function () {
 
   beforeEach(function () {
     page = startGame(page, ownerId, gameId, browsers);
     selectQuesters(browsers, numQuesters, 0);
     /*_.times(3, function (i) {
-      selectQuesters(browsers, numQuesters, i);
-      _.each(browsers, function (aBrowser) {
-        var gameViewPage = new GameViewPage(aBrowser);
-        gameViewPage.acceptQuestersButton.click();
-      });
-      _.each(browsers, function (aBrowser) {
-        var gameViewPage = new GameViewPage(aBrowser);
-        gameViewPage.questSuccessButton.isPresent().then(function (isPresent) {
-          if (isPresent) {
-            gameViewPage.questSuccessButton.isEnabled().then(function (isEnabled) {
-              if (isEnabled) {
-                gameViewPage.questSuccessButton.click();
-              }
-            });
-          }
-        });
-      });
-    });
-    */
+     selectQuesters(browsers, numQuesters, i);
+     _.each(browsers, function (aBrowser) {
+     var gameViewPage = new GameViewPage(aBrowser);
+     gameViewPage.acceptQuestersButton.click();
+     });
+     _.each(browsers, function (aBrowser) {
+     var gameViewPage = new GameViewPage(aBrowser);
+     gameViewPage.questSuccessButton.isPresent().then(function (isPresent) {
+     if (isPresent) {
+     gameViewPage.questSuccessButton.isEnabled().then(function (isEnabled) {
+     if (isEnabled) {
+     gameViewPage.questSuccessButton.click();
+     }
+     });
+     }
+     });
+     });
+     });
+     */
   });
 
   it('should do stuff', function () {
+    while(true){
+
+    }
     _.each(browsers, function (aBrowser, k) {
       var gamePage = new GameViewPage(aBrowser);
-      gamePage.submitQuestersButton.isPresent().then(function (isCurrentKing) {
-        console.log('k', k);
-        expect(gamePage.getSelectPlayerCheckBox(0).evaluate('questers["player0"]')).toBeTruthy();
-        expect(gamePage.getSelectPlayerCheckBox(1).evaluate('questers["player1"]')).toBeTruthy();
-        expect(gamePage.getSelectPlayerCheckBox(2).evaluate('questers["player2"]')).toBeFalsy();
-        expect(gamePage.getSelectPlayerCheckBox(3).evaluate('questers["player3"]')).toBeFalsy();
-        expect(gamePage.getSelectPlayerCheckBox(4).evaluate('questers["player4"]')).toBeFalsy();
-      });
+
     });
   });
 });
