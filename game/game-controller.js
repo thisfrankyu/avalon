@@ -40,7 +40,7 @@ GameController.prototype._registerPlayer = function (playerId, callback) {
     }
     this.players[playerId] = new Player(playerId);
     if (callback) callback(null, {playerId: playerId});
-}
+};
 
 GameController.prototype._handleRegisterPlayer = function (msg) {
     var playerId = msg.playerId,
@@ -261,7 +261,7 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
             filteredGameView: filteredGameView
         });
     }
-    // TODO: what to do when game ends
+    this._checkIfGameEnded(gameId);
 };
 
 GameController.prototype._handleVoteAcceptReject = function (msg) {
@@ -310,9 +310,11 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
                 filteredGameView: new FilteredGameView(game)
             });
         }
+
         this.emitter.emit('stageChanged', {
             filteredGameView: new FilteredGameView(game)
         });
+        this._checkIfGameEnded(gameId);
     }
 };
 
@@ -364,6 +366,7 @@ GameController.prototype._attemptKillMerlin = function (requestingPlayerId, game
     this.emitter.emit('stageChanged', {
         filteredGameView: new FilteredGameView(game)
     });
+    this._checkIfGameEnded(gameId);
 };
 
 GameController.prototype._handleAttemptKillMerlin = function (msg) {
@@ -372,6 +375,21 @@ GameController.prototype._handleAttemptKillMerlin = function (msg) {
         callback = msg.callback;
 
     this.exec(this._attemptKillMerlin.bind(this, requestingPlayerId, gameId, callback), callback);
+};
+
+GameController.prototype._checkIfGameEnded = function (gameId) {
+    var game = this.games[gameId],
+        self = this, msg;
+    this._validateGame(gameId);
+    if (game.stage !== STAGES.BAD_WINS && game.stage !== STAGES.GOOD_WINS) return;
+
+    this.emitter.emit('endGame', {
+        game: game
+    });
+    _.each(game.players, function (player, playerId) {
+        delete self.players[playerId];
+    });
+    delete this.games[gameId];
 };
 
 GameController.prototype.init = function () {

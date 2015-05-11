@@ -723,6 +723,16 @@ test('test voteSuccessFail', function (t) {
         };
         msg.callback(null, response);
         testEmitter.emit('killMerlinAttempted', response);
+        var playersMap = _.reduce(players, function (memo, playerId) {
+            memo[playerId] = {id: playerId};
+            return memo;
+        }, {});
+        testEmitter.emit('endGame', {
+            game: {
+                gameId: gameId,
+                players: playersMap
+            }
+        });
     });
     socket.once('targetMerlinAck', function (msg) {
         t.deepEqual(msg, {
@@ -740,10 +750,20 @@ test('test voteSuccessFail', function (t) {
                 sessionId: sessionId
             },
             'make sure killMerlinAttemptSucceeded is reported correctly');
+
+    });
+    testEmitter.once('endGame', function (msg) {
+        _.each(players, function (playerId) {
+            t.ok(!_.has(sessionController.playersToSessions, playerId), 'make sure that ' + playerId + ' is no longer registered in the session');
+        });
+        _.each(sessionController.sessions, function (session) {
+            t.ok(session.playerId === null, 'make sure that the sessions have been unregistered correctly');
+        });
         t.end();
     });
     socket.emit('targetMerlin', {gameId: gameId, targetId: player1});
     socket.emit('killMerlin', {gameId: gameId});
+
 });
 
 function initGame(sessionController, io, socket, testEmitter, players, ownerId, gameId, badSpecialRoles, goodSpecialRoles, playerId, sockets, sessionSockets) {

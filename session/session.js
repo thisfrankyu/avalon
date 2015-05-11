@@ -35,9 +35,6 @@ SessionController.prototype._validateRegistered = function (sessionSocketId) {
 };
 
 
-
-
-
 SessionController.prototype._registerPlayer = function (sessionSocketId, playerId) {
     var session = this.sessions[sessionSocketId],
         self = this;
@@ -450,6 +447,21 @@ SessionController.prototype._handleQuestEnded = function (msg) {
     this.io.emit('questEnded', response);
 };
 
+SessionController.prototype._deletePlayerIds = function (players) {
+    var self = this;
+    _.each(players, function (player, playerId) {
+        var session = self.playersToSessions[playerId];
+        session.playerId = null;
+        delete self.playersToSessions[playerId];
+    });
+};
+
+SessionController.prototype._handleEndGame = function (msg) {
+    var game = msg.game;
+    this.exec(this._deletePlayerIds.bind(this, game.players));
+};
+
+
 SessionController.prototype._passEventToClient = function (event) {
     var self = this;
     this.emitter.on(event, function (msg) {
@@ -478,6 +490,7 @@ SessionController.prototype.init = function () {
     this._passEventToClient('merlinTargeted');
     this._passEventToClient('killMerlinAttempted');
     this._passEventToClient('stageChanged');
+    this.emitter.on('endGame', this._handleEndGame.bind(this));
 };
 
 exports.SessionController = SessionController;

@@ -60,7 +60,7 @@ describe('stuff View', function () {
         });
       });
     });
-    
+
   });
 
   it('should do stuff', function () {
