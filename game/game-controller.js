@@ -235,21 +235,17 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
     };
     this.emitter.emit('votedOnQuesters', votedOnQuestersMsg);
     if (callback) callback(null, votedOnQuestersMsg);
-
+    filteredGameView = new FilteredGameView(game);
     if (result.stage === STAGES.QUEST) {
-        filteredGameView = new FilteredGameView(game);
+
         this.emitter.emit('questAccepted', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
             votes: result.votes,
             filteredGameView: filteredGameView
         });
-        this.emitter.emit('stageChanged', {
-            filteredGameView: filteredGameView
-        });
     }
     if (result.stage === STAGES.SELECT_QUESTERS) {
-        filteredGameView = new FilteredGameView(game);
         this.emitter.emit('questRejected', {
             gameId: gameId,
             players: game.currentQuest().selectedQuesters,
@@ -258,6 +254,9 @@ GameController.prototype._voteAcceptReject = function (playerId, vote, gameId, c
             filteredGameView: filteredGameView
         });
 
+
+    }
+    if (result.stage !== STAGES.VOTE_ON_QUESTERS) {
         this.emitter.emit('stageChanged', {
             filteredGameView: filteredGameView
         });
@@ -310,12 +309,10 @@ GameController.prototype._voteSuccessFail = function (playerId, vote, gameId, ca
                 assassinInGame: assassinInGame,
                 filteredGameView: new FilteredGameView(game)
             });
-
-            this.emitter.emit('stageChanged', {
-                filteredGameView: new FilteredGameView(game)
-            });
         }
-
+        this.emitter.emit('stageChanged', {
+            filteredGameView: new FilteredGameView(game)
+        });
     }
 };
 
@@ -364,6 +361,9 @@ GameController.prototype._attemptKillMerlin = function (requestingPlayerId, game
     };
     if (callback) callback(null, msg);
     this.emitter.emit('killMerlinAttempted', msg);
+    this.emitter.emit('stageChanged', {
+        filteredGameView: new FilteredGameView(game)
+    });
 };
 
 GameController.prototype._handleAttemptKillMerlin = function (msg) {

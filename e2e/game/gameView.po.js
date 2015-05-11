@@ -18,6 +18,7 @@ var GameViewPage = function(browser) {
   this.submitQuestersButton = browser.element(by.buttonText('Submit Questers'));
 
   this.acceptQuestersButton = browser.element(by.buttonText('ACCEPT'));
+  this.rejectQuestersButton = browser.element(by.buttonText('REJECT'));
   this.questSuccessButton = browser.element(by.buttonText('SUCCESS'));
 };
 

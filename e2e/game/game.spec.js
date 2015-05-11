@@ -17,6 +17,7 @@ describe('stuff View', function () {
     page.playerIdInput.sendKeys(ownerId);
     page.gameIdInput.sendKeys(gameId);
     page.submitButton.click();
+
     _.times(4, function (i) {
       var joinGameBrowser = browser.forkNewDriverInstance(false, true),
         joinGamePage = new JoinGamePage(joinGameBrowser);
@@ -28,6 +29,7 @@ describe('stuff View', function () {
     });
     page = new LobbyPage(browser);
     page.startGameButton.click();
+
     _.times(3, function (i) {
       _.each(browsers, function (aBrowser) {
         var gameViewPage = new GameViewPage(aBrowser);
@@ -58,6 +60,7 @@ describe('stuff View', function () {
         });
       });
     });
+    
   });
 
   it('should do stuff', function () {

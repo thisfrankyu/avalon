@@ -9,15 +9,22 @@ angular.module('avalonApp')
         templateUrl: 'app/endGame/endGame.modal.html',
         controller: 'EndGameModalCtrl',
         resolve: {
-          stage: function(){
+          stage: function () {
             return stage;
           }
         }
       });
     }
 
-    socket.on('killMerlinAttempted', function (msg) {
-      console.log('killMerlinAttempted received, msg ' + JSON.stringify(msg));
-      openEndGameModal(msg.stage);
+    $rootScope.$on('stageChanged', function (scope, stage) {
+      if (stage === game.STAGES.BAD_WINS) {
+        openEndGameModal(stage);
+        return;
+      }
+      if (stage == game.STAGES.GOOD_WINS) {
+        openEndGameModal(stage);
+        return;
+      }
+      console.log('stageChanged:', stage);
     });
   });
