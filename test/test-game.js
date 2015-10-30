@@ -152,6 +152,22 @@ test('test player order', function (t) {
     t.end();
 });
 
+
+function verifyViews(players, t) {
+    players.forEach(function (player) {
+        if (!player.view.length) {
+            t.deepEqual(player.view, VIEW[player.role], 'Test that the player who is ' + player.role + ' cannot see anyone');
+        }
+
+        players.forEach(function (otherPlayer) {
+            if (VIEW[player.role].indexOf(otherPlayer.role) !== -1) {
+                t.ok(player.view.indexOf(otherPlayer.id) !== -1, 'Test that ' + player.id + ' who is ' + player.role +
+                ' can see ' + otherPlayer.id + ' who is ' + otherPlayer.role);
+            }
+        });
+    });
+}
+
 test('test player views (all special roles)', function (t) {
     var game = new Game('bobgame', 'player0', {
             goodSpecialRoles: ["MERLIN", "PERCIVAL"],
@@ -165,16 +181,7 @@ test('test player views (all special roles)', function (t) {
     });
 
     game.start();
-    players.forEach(function (player) {
-        if (!player.view.length) {
-            t.deepEqual(player.view, VIEW[player.role], 'Test that the player who is ' + player.role + ' cannot see anyone');
-        }
-
-        _.each(player.view, function (viewed) {
-            t.ok(VIEW[player.role].indexOf(game.roles[viewed]) !== -1, "Test that the player who is " +
-            player.role + ' can see ' + viewed + ' (' + game.roles[viewed] + ')')
-        });
-    });
+    verifyViews(players, t);
 
     t.end();
 });
@@ -192,16 +199,25 @@ test('test player views (with regular minion)', function (t) {
     });
 
     game.start();
-    players.forEach(function (player) {
-        if (!player.view.length) {
-            t.deepEqual(player.view, VIEW[player.role], 'Test that the player who is ' + player.role + ' cannot see anyone');
-        }
+    verifyViews(players, t);
 
-        _.each(player.view, function (viewed) {
-            t.ok(VIEW[player.role].indexOf(game.roles[viewed]) !== -1, "Test that the player who is " +
-            player.role + ' can see ' + viewed + ' (' + game.roles[viewed] + ')')
-        });
+    t.end();
+});
+
+test('test player views (with multiple regular minions)', function (t) {
+    var game = new Game('bobgame', 'player0', {
+            goodSpecialRoles: ["MERLIN", "PERCIVAL"],
+            badSpecialRoles: ["ASSASSIN"]
+        }),
+        players = [];
+
+    _.times(10, function (n) {
+        players.push(new Player('player' + n));
+        game.addPlayer(players[n]);
     });
+
+    game.start();
+    verifyViews(players, t);
 
     t.end();
 });

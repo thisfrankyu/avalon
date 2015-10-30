@@ -64,8 +64,7 @@ Game.prototype.currentQuest = function () {
 };
 
 Game.prototype.getNumPlayers = function () {
-    var numPlayers = Object.keys(this.players).length;
-    return numPlayers;
+    return Object.keys(this.players).length;
 };
 
 //Pre-Game
@@ -90,7 +89,7 @@ Game.prototype.setBadSpecialRoles = function (roles) {
 Game.prototype.getAlignment = function (playerId) {
     this._validatePlayerInGame(playerId);
     return GOOD_ROLES.hasOwnProperty(this.roles[playerId]) ? ALIGNMENT.GOOD : ALIGNMENT.BAD;
-}
+};
 
 //Start
 Game.prototype.start = function () {
@@ -181,11 +180,19 @@ Game.prototype._validateRoles = function (numVillageIdiots, numRegularBadPlayers
 
 Game.prototype._createView = function (role) {
     var view = [],
-        rolesToPlayers = _.invert(this.roles);
-
+        self = this,
+        rolesToPlayers = {};
+    _.each(Object.keys(this.roles), function (playerId) {
+        var role = self.roles[playerId];
+        if (rolesToPlayers.hasOwnProperty(role)) {
+            rolesToPlayers[role].push(playerId);
+        } else {
+            rolesToPlayers[role] = [playerId];
+        }
+    });
     _.each(VIEW[role], function (visibleRole) {
         if (rolesToPlayers.hasOwnProperty(visibleRole)) {
-            view.push(rolesToPlayers[visibleRole]);
+            view = view.concat(rolesToPlayers[visibleRole]);
         }
     });
     return view;
@@ -297,7 +304,7 @@ Game.prototype.voteSuccessFail = function (votingPlayerId, vote) {
     if (this.stage !== STAGES.QUEST) {
         throw new Error('Tried to vote on success or fail before quest was started');
     }
-    if (vote !== VOTE.SUCCESS && vote !== VOTE.FAIL){
+    if (vote !== VOTE.SUCCESS && vote !== VOTE.FAIL) {
         throw new Error('invalid vote value');
     }
     this._validatePlayerOnQuest(votingPlayerId, vote);
