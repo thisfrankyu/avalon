@@ -32,7 +32,7 @@
   </div>
   <div class="row">
     <div class="col-xs-12 text-center">
-      <ul id="questView">
+      <ul id="rejections">
         <h3>Rejections: {{game.state.currentQuest().numRejections}}/5</h3>
       </ul>
     </div>
@@ -55,7 +55,7 @@
         <li class="list-group-item" ng-repeat="playerId in game.state.playerOrder">
           {{playerId}}
           <i ng-if="playerId === game.state.playerOrder[game.state.kingIndex]"
-             class="fa fa-star"></i>
+             class="fi-crown"></i>
         </li>
       </ul>
       <div class="text-center">You are {{player.state.id}} and your role is {{player.state.role}}</div>
