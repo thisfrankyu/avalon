@@ -26,15 +26,14 @@
           </div>
           <div>Players On Quest: {{quest.numPlayers}}</div>
           <div>Votes to Fail: {{quest.numToFail}}</div>
+          <div ng-if="quest.result === game.VOTE.FAIL">Failures: {{quest.numFailVotes}}</div>
         </li>
       </ul>
     </div>
   </div>
   <div class="row">
     <div class="col-xs-12 text-center">
-      <ul id="rejections">
-        <h3>Rejections: {{game.state.currentQuest().numRejections}}/5</h3>
-      </ul>
+      <h3>Rejections: {{game.state.currentQuest().numRejections}}/5</h3>
     </div>
   </div>
   <div class="row">

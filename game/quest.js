@@ -16,6 +16,7 @@ var QUEST_STATE = {
 function Quest(numPlayers, numToFail) {
     this.numPlayers = numPlayers;
     this.numToFail = numToFail;
+    this.numFailVotes = 0;
     this.numRejections = 0;
     this.selectedQuesters = [];
     this.votesOnQuest = {}; // playerId --> vote
@@ -60,10 +61,10 @@ Quest.prototype.voteOnSuccessOrFail = function (votes) {
         throw new Error('More votes than number allowed');
     }
 
-    var numFails = _.reduce(votes, function (memo, num) {
+    this.numFailVotes = _.reduce(votes, function (memo, num) {
         return memo + (num === VOTE.FAIL ? 1 : 0);
     }, 0);
-    return numFails < this.numToFail;
+    return this.numFailVotes < this.numToFail;
 };
 
 Quest.prototype.clearSelectedQuesters = function () {
@@ -72,6 +73,7 @@ Quest.prototype.clearSelectedQuesters = function () {
 
 Quest.prototype.clearVotesOnQuest = function () {
     this.votesOnQuest = {};
+    this.numFailVotes = 0;
 };
 
 

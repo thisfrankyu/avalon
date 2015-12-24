@@ -6,6 +6,7 @@ ul#questView li.questContainer {
   list-style: none;
   display: inline-block;
   padding: 0px 20px;
+  vertical-align: top;
 }
 
 #playerList li.list-group-item,
