@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('KillMerlinCtrl', function ($scope, $rootScope, $modal, socket, game, player) {
+  .controller('KillMerlinCtrl', function ($scope, $rootScope, $modal, socket, player, game) {
     var modal;
     $scope.game = game;
 

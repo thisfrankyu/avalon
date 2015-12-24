@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('LobbyCtrl', function ($scope, $location, player, game, socket, session) {
+  .controller('LobbyCtrl', function ($scope, $location, player, game, session, socket) {
     console.log(JSON.stringify(game));
     $scope.player = player;
     $scope.game = game;

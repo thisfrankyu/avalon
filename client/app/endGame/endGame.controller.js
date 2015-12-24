@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('avalonApp')
-  .controller('EndGameCtrl', function ($scope, $rootScope, $modal, socket, game, player) {
+  .controller('EndGameCtrl', function ($scope, $rootScope, $modal, socket, player, game) {
     $scope.game = game;
 
     function openEndGameModal(stage) {
@@ -21,7 +21,7 @@ angular.module('avalonApp')
         openEndGameModal(stage);
         return;
       }
-      if (stage == game.STAGES.GOOD_WINS) {
+      if (stage === game.STAGES.GOOD_WINS) {
         openEndGameModal(stage);
         return;
       }
